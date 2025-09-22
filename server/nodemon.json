@@ -1,5 +1,0 @@
-{
-  "watch": ["index.js", "db.js"],
-  "ignore": ["node_modules/*"],
-  "ext": "js,mjs"
-}
