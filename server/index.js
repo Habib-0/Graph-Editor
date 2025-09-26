@@ -79,7 +79,7 @@ app.get("/edges",async(req,res)=>{
 
     } catch{
         console.log(err);
-        
+
     }
 });
 
@@ -113,6 +113,32 @@ app.post("/uppdatenodes", async (req, res) => {
   } catch (err) {
     console.error(err);
 
+  }
+});
+
+
+
+app.post("/importnodes", async (req, res) => {
+  try {
+    const { nodes } = req.body;
+    if (!nodes || !Array.isArray(nodes)) {
+      return res.status(400).json({ message: "No nodes provided" });
+    }
+
+    for (let n of nodes) {
+      await pool.query(
+        `INSERT INTO nodes (id, name, x, y)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id)
+         DO UPDATE SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y`,
+        [n.id, n.name, n.position.x, n.position.y]
+      );
+    }
+
+    res.json({ message: "Nodes imported successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 });
 

@@ -6,7 +6,8 @@
   // import ResizableNodeSelected from './ResizableNodeSelected';
   import "@xyflow/react/dist/style.css";
   import { label } from "three/tsl";
-
+// import {forcelayout}from './positiond3'
+import ImportCSV from "./import.";
 
 
 
@@ -193,8 +194,23 @@ const deleteNode = () => {
     }
   }
 
+const saveCsvToDB = async () => {
+  try {
+    console.log("saving nodes ",nodes);
+    await fetch("http://localhost:5000/importnodes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nodes }),
+    });
 
-      // i have taken this piece of code from https://reactflow.dev/learn
+    alert("Nodes saved to database!");
+  } catch (err) {
+    console.error("Error saving nodes to DB:", err);
+  }
+};
+
+
+
 
 
 
@@ -215,7 +231,7 @@ const onNodesChange = useCallback((changes: NodeChange[]) => {
   setRfNodes(prev => {
     const updatedNodes = applyNodeChanges(changes, prev);
 
-    
+
     changes.forEach(change => {
       if (change.type === "position" && change.position && change.id) {
         const nodeId = parseInt(change.id.replace("n", ""));
@@ -233,7 +249,7 @@ const onNodesChange = useCallback((changes: NodeChange[]) => {
       []
     );
 
-      //here
+
 
 
 
@@ -305,6 +321,15 @@ const onNodesChange = useCallback((changes: NodeChange[]) => {
             <label>
 
 
+        <button
+          className="btn btn-success"
+          onClick={saveCsvToDB}
+        >
+        Save CSV to Database
+      </button>
+
+
+
         <input
           type="text"
           value={nodeName}
@@ -319,6 +344,28 @@ const onNodesChange = useCallback((changes: NodeChange[]) => {
 
 
       </label>
+          <ImportCSV
+      onImport={(csvNodes) => {
+
+        setNodes(csvNodes);
+
+        const flowNodes = csvNodes.map(n => ({
+          id: `n${n.id}`,
+          data: { label: n.name },
+          position: n.position,
+          style: {
+            backgroundColor: "white",
+            color: "black",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            border: "2px solid #333",
+          },
+        }));
+
+        setRfNodes(flowNodes);
+      }}
+    />
 
 
 
@@ -326,12 +373,6 @@ const onNodesChange = useCallback((changes: NodeChange[]) => {
 
 
 
-
-        <ul style={{ position: "absolute", top: 50, left: 10, zIndex: 10 }}>
-          {nodes.map(node => (
-            <li key={node.id}>{node.name}</li>
-          ))}
-        </ul>
 
 
         <ReactFlow
