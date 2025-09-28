@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import pool from "./db.js";
+import { Parser } from "json2csv";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 app.post("/addnode", async (req, res) => {
     try {
 
@@ -138,10 +138,80 @@ app.post("/importnodes", async (req, res) => {
     res.json({ message: "Nodes imported successfully!" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+
   }
 });
 
+app.post("/importedges", async (req, res) => {
+  try {
+    const { edges } = req.body;
+    for (let n of edges) {
+      const { from_node, to_node, weight, directed } = n;
+      await pool.query(
+        `INSERT INTO edges (from_node, to_node, weight, directed)
+         VALUES($1,$2,$3,$4)`,
+        [from_node, to_node, weight, directed]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.log(err);
+
+  }
+});
+
+
+
+app.get("/exportall",async(req, res)=>{
+  try{
+    const nodeResult= await pool.query("SELECT *FROM nodes");
+    const edgeResult=await pool.query("SELECT * FROM edges");
+
+    const nodes= nodeResult.rows.map((n)=>({
+      type:"node",
+      id: n.id,
+      name: n.name,
+      x:n.x,
+      y:n.y
+
+    }));
+
+    const edgdes=edgeResult.rows.map((e)=>({
+        type:"edge",
+        edge_id:e.edge_id,
+        from_node:e.from_node,
+        to_node:e.to_node,
+        weight:e.weight,
+        directed:e.directed
+
+    }));
+
+    const all=[...nodes,...edgdes];
+
+    const fields=[
+      "type",
+      "id",
+      "name",
+      "x",
+      "y",
+      "edge_id",
+      "from_node",
+      "to_node",
+      "weight",
+      "directed",
+
+    ];
+    const parser=new Parser ({fields});
+    const csv= parser.parse(all);
+
+        res.header("Content-Type", "text/csv");
+    res.attachment("graph_data.csv");
+    res.send(csv);
+
+  }catch(err){
+    console.log(err)
+  }
+});
 
 app.listen(5000, () => {
     console.log("Server has started on port 5000");
