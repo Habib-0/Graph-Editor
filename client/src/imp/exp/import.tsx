@@ -2,25 +2,10 @@ import { useRef } from "react";
 import Papa from "papaparse";
 import type { ParseResult } from "papaparse";
 
-interface CSVRow {
-  id: string;
-  name: string;
-  x?: string;
-  y?: string;
-}
-
 interface CSVNode {
   id: number;
   name: string;
   position: { x: number; y: number };
-}
-
-interface CSVEdgeRow {
-  edge_id: string;
-  from_node: string;
-  to_node: string;
-  weight?: string;
-  directed?: string;
 }
 
 interface CSVEdge {
@@ -49,12 +34,14 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
       header: true,
       skipEmptyLines: true,
       complete: (results: ParseResult<any>) => {
+        if (results.data.length === 0) return;
+
         const firstRow = results.data[0];
 
         
-        if (firstRow.id && firstRow.name) {
-          const parsedNodes: CSVNode[] = results.data.map((row: CSVRow) => ({
-            id: Number(row.id),
+        if ((firstRow.id && firstRow.name) || (firstRow.name && firstRow.x !== undefined && firstRow.y !== undefined)) {
+          const parsedNodes: CSVNode[] = results.data.map((row: any, i: number) => ({
+            id: row.id ? Number(row.id) : i + 1,
             name: row.name,
             position: {
               x: row.x ? Number(row.x) : Math.random() * 500,
@@ -65,13 +52,13 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
         }
 
 
-        else if (firstRow.edge_id) {
-          const parsedEdges: CSVEdge[] = results.data.map((row: CSVEdgeRow) => ({
-            edge_id: Number(row.edge_id),
+        else if (firstRow.edge_id || (firstRow.from_node && firstRow.to_node)) {
+          const parsedEdges: CSVEdge[] = results.data.map((row: any, i: number) => ({
+            edge_id: row.edge_id ? Number(row.edge_id) : i + 1,
             from_node: Number(row.from_node),
             to_node: Number(row.to_node),
-            weight: row.weight ? Number(row.weight) : undefined,
-            directed: row.directed?.toLowerCase() === "true",
+            weight: row.weight ? Number(row.weight) : 1,
+            directed: row.directed?.toString().toLowerCase() === "true",
           }));
           onImportEdges?.(parsedEdges);
         }

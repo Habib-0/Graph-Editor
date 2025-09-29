@@ -77,7 +77,7 @@ export async function saveNodePosition(id: number, position: { x: number; y: num
 export async function exportall(){
   const res=await fetch("http://localhost:5000/exportall");
   if(!res)throw new Error("faild to  export");
-  
+
   const blob = await res.blob();
   const url = window.URL.createObjectURL(blob);
 
@@ -87,4 +87,19 @@ export async function exportall(){
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+
+export async function undo() {
+  const res = await fetch("http://localhost:5000/undo", {
+    method: "POST",
+  });
+  return await res.json();
+}
+
+export async function redo() {
+  const res = await fetch("http://localhost:5000/redo", {
+    method: "POST",
+  });
+  return await res.json();
 }

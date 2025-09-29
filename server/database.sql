@@ -8,8 +8,8 @@ CREATE DATABASE graphs;
 CREATE TABLE nodes (
     id SERIAL PRIMARY KEY,
     name TEXT,
-    x INT DEFAULT 0,
-    y INT DEFAULT 0
+    x FLOAT DEFAULT 0,
+    y FLOAT DEFAULT 0
 );
 
 CREATE TABLE edges (
@@ -20,4 +20,14 @@ CREATE TABLE edges (
     directed BOOLEAN DEFAULT TRUE,
     CONSTRAINT fk_from_node FOREIGN KEY(from_node) REFERENCES nodes(id) ON DELETE CASCADE,
     CONSTRAINT fk_to_node FOREIGN KEY(to_node) REFERENCES nodes(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE log(
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    table_name TEXT NOT NULL,
+    data JSONB NOT NULL ,
+    undone BOOLEAN  DEFAULT false,
+    created_at TIMESTAMP DEFAULT NOW()
 );

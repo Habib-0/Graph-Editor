@@ -391,3 +391,70 @@
 //       </div>
 //     );
 //   }
+
+
+
+
+
+
+// import React from "react";
+// import ImportCSV from "./imp/exp/import";
+// import * as api from "./api";
+
+// interface NodeControlsProps {
+//   onAddNode: () => void;
+//   onDeleteNode: () => void;
+//   onDeleteEdge: () => void;
+//   onSaveCsv: () => void;
+//   nodeName: string;
+//   setNodeName: (name: string) => void;
+//   onImportNodes: (nodes: any[]) => void;
+//   onImportEdges?: (edges: any[]) => void;
+// }
+
+// export default function NodeControls({
+//   onAddNode,
+//   onDeleteNode,
+//   onDeleteEdge,
+//   onSaveCsv,
+//   nodeName,
+//   setNodeName,
+//   onImportNodes,
+//   onImportEdges,
+// }: NodeControlsProps) {
+//   return (
+//     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
+//       <button onClick={onAddNode}>Add Node</button>
+//       <button onClick={onDeleteNode}>Delete Node</button>
+//       <button onClick={onDeleteEdge}>Delete Edge</button>
+//       <button onClick={onSaveCsv}>Save CSV to Database</button>
+//       <button onClick={api.exportall}>Export Nodes + Edges</button>
+
+//       {/* Undo / Redo Buttons */}
+//       <button onClick={async () => {
+//         await api.undo();
+//         const updatedNodes = await api.fetchNodes();
+//         const updatedEdges = await api.fetchEdges();
+//         onImportNodes(updatedNodes);
+//         if (onImportEdges) onImportEdges(updatedEdges);
+//       }}>Undo</button>
+
+//       <button onClick={async () => {
+//         await api.redo();
+//         const updatedNodes = await api.fetchNodes();
+//         const updatedEdges = await api.fetchEdges();
+//         onImportNodes(updatedNodes);
+//         if (onImportEdges) onImportEdges(updatedEdges);
+//       }}>Redo</button>
+
+//       <input
+//         type="text"
+//         value={nodeName}
+//         onChange={(e) => setNodeName(e.target.value)}
+//         placeholder="Write name of the node"
+//       />
+
+//       <ImportCSV onImportNodes={onImportNodes} onImportEdges={onImportEdges} />
+//     </div>
+//   );
+// }

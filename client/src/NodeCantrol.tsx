@@ -3,7 +3,6 @@ import ImportCSV from "./imp/exp/import";
 import { exportall } from "./api";
 
 
-
 interface NodeControlsProps {
   onAddNode: () => void;
   onDeleteNode: () => void;
@@ -14,6 +13,10 @@ interface NodeControlsProps {
   setNodeName: (name: string) => void;
   onImportNodes: (nodes: any[]) => void;
   onImportEdges?: (edges: any[]) => void;
+
+
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export default function NodeControls({
@@ -21,20 +24,23 @@ export default function NodeControls({
   onDeleteNode,
   onDeleteEdge,
   onSaveCsv,
-
   nodeName,
   setNodeName,
   onImportNodes,
   onImportEdges,
+  onUndo,
+  onRedo,
 }: NodeControlsProps) {
   return (
-    
-    <div>
+    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "1px" }}>
       <button onClick={onAddNode}>Add Node</button>
       <button onClick={onDeleteNode}>Delete Node</button>
       <button onClick={onDeleteEdge}>Delete Edge</button>
       <button onClick={onSaveCsv}>Save CSV to Database</button>
-       <button onClick={exportall}>Export Nodes + Edges</button>
+      <button onClick={exportall}>Export Nodes + Edges</button>
+      {}
+      <button onClick={onUndo}>Undo</button>
+      <button onClick={onRedo}>Redo</button>
 
       <input
         type="text"

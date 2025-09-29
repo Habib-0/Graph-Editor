@@ -10,10 +10,12 @@ import "@xyflow/react/dist/style.css";
 import NodeControls from "./NodeCantrol";
 import * as api from "./api";
 
+
 interface Node {
   id: number;
   name: string;
-  position: { x: number; y: number };
+  x: number;
+  y: number;
 }
 
 export default function Nodes() {
@@ -24,37 +26,33 @@ export default function Nodes() {
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [nodeName, setNodeName] = useState("");
 
-  
+
+  const reloadGraph = async () => {
+    const updatedNodes = await api.fetchNodes();
+    const updatedEdges = await api.fetchEdges();
+
+    setNodes(updatedNodes);
+    setRfNodes(
+      updatedNodes.map((n: Node) => ({
+        id: `n${n.id}`,
+        data: { label: n.name || "NO NAME" },
+        position: { x: n.x, y: n.y },
+        style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+      }))
+    );
+    setEdges(
+      updatedEdges.map((e: any) => ({
+        id: `e${e.edge_id}`,
+        source: `n${e.from_node}`,
+        target: `n${e.to_node}`,
+        label: e.weight?.toString() || "",
+      }))
+    );
+  };
+
   useEffect(() => {
-    api.fetchNodes().then((data) => {
-      console.log("Fetched nodes:", data);
-      setNodes(data);
-      setRfNodes(
-        data.map((n) => ({
-          id: `n${n.id}`,
-          data: { label: n.name || "NO NAME" },
-          position: { x: n.x, y: n.y },
-          style: { backgroundColor: "white", color: "black", border: "2px solid #333" },
-        }))
-      );
-    });
+    reloadGraph();
   }, []);
-
-
-  useEffect(() => {
-    if (rfNodes.length === 0) return;
-    api.fetchEdges().then((data) => {
-      setEdges(
-        data.map((e: any) => ({
-          id: `e${e.edge_id}`,
-          source: `n${e.from_node}`,
-          target: `n${e.to_node}`,
-          label: e.weight?.toString() || "",
-        }))
-      );
-    });
-  }, [rfNodes]);
-
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     setRfNodes((prev) => {
@@ -69,12 +67,10 @@ export default function Nodes() {
     });
   }, []);
 
-
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => setEdges((prev) => applyEdgeChanges(changes, prev)),
     []
   );
-
 
   const onConnect = useCallback((connection: Connection) => {
     setEdges((prev) => rfAddEdge(connection, prev));
@@ -94,16 +90,17 @@ export default function Nodes() {
           const newNode: Node = {
             id: saved.id,
             name: saved.name,
-            position: { x: saved.x, y: saved.y },
+            x: saved.x,
+            y: saved.y,
           };
           setNodes((prev) => [...prev, newNode]);
           setRfNodes((prev) => [
             ...prev,
             {
               id: `n${newNode.id}`,
-              data: { label: newNode.name },
-              position: newNode.position,
-              style: { backgroundColor: "white", border: "2px solid #333" },
+              data: { label: newNode.name || "NO NAME" },
+              position: { x: newNode.x, y: newNode.y },
+              style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
             },
           ]);
         }}
@@ -124,30 +121,24 @@ export default function Nodes() {
           setEdges((prev) => prev.filter((e) => e.id !== selectedEdge));
           setSelectedEdge(null);
         }}
-
         onSaveCsv={async () => {
           await api.saveCsvToDB(nodes);
-
-      const edgesToSave = edges.map((e) => ({
-        from_node: parseInt(e.source.replace("n", "")),
-        to_node: parseInt(e.target.replace("n", "")),
-        weight: e.label ? parseInt(e.label) : 0,
-        directed: false,
-      }));
-
-
+          const edgesToSave = edges.map((e) => ({
+            from_node: parseInt(e.source.replace("n", "")),
+            to_node: parseInt(e.target.replace("n", "")),
+            weight: e.label ? parseInt(e.label) : 0,
+            directed: false,
+          }));
           await api.saveEdge(edgesToSave);
-
-
         }}
         onImportNodes={(csvNodes) => {
           setNodes(csvNodes);
           setRfNodes(
-            csvNodes.map((n) => ({
+            csvNodes.map((n: Node) => ({
               id: `n${n.id}`,
-              data: { label: n.name },
-              position: n.position,
-              style: { backgroundColor: "white", border: "2px solid #333" },
+              data: { label: n.name || "Node" },
+              position: { x: n.x, y: n.y },
+              style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
             }))
           );
         }}
@@ -160,6 +151,17 @@ export default function Nodes() {
               label: e.weight?.toString() || "",
             }))
           );
+        }}
+
+        onUndo={async () => {
+          const result = await api.undo();
+          console.log("Undo:", result);
+          await reloadGraph();
+        }}
+        onRedo={async () => {
+          const result = await api.redo();
+          console.log("Redo:", result);
+          await reloadGraph();
         }}
       />
 

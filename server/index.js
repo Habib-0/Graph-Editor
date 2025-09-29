@@ -8,20 +8,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.post("/addnode", async (req, res) => {
-    try {
+  try {
+    const { name, x, y } = req.body;
+    const newNode = await pool.query(
+      "INSERT INTO nodes(name,x,y) VALUES ($1,$2,$3) RETURNING *",
+      [name, x, y]
+    );
 
-        const { name, x, y } = req.body;
-        const newNode = await pool.query(
-            "INSERT INTO nodes(name,x,y) VALUES ($1,$2,$3) RETURNING *",
-            [name, x, y]
-        );
 
-        res.json(newNode.rows[0]);
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ error: error.message });
-    }
+    await pool.query(
+      "INSERT INTO log (name, table_name, data) VALUES ($1, $2, $3::jsonb)",
+      ["addnode", "nodes", JSON.stringify(newNode.rows[0])]
+    );
+
+    res.json(newNode.rows[0]);
+  } catch (error) {
+    console.error(error);
+  }
 });
+
 
 app.get("/nodes", async (req, res) => {
     try {
@@ -36,40 +41,81 @@ app.get("/nodes", async (req, res) => {
 
 
 
-app.post ("/deletenode",async(req,res)=>{
-    try{
-        const {id}=req.body;
-        if(!id){
-            return res.status(400).json({message:"Node is not found"});
-        }
-        const deletNOde="DELETE FROM nodes WHERE id=$1 RETURNING*";
-        const result =await pool.query(deletNOde,[id]);
-
-        if(result.rowCount===0){
-            return res.status(400).json({message:" Node not found "});
-        }
-
-    }catch (err){
-        console.log(err);
+app.post("/deletenode", async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) {
+      return res.status(400).json({ message: "Node is not found" });
     }
 
+    const result = await pool.query(
+      "DELETE FROM nodes WHERE id=$1 RETURNING *",
+      [id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(400).json({ message: "Node not found" });
+    }
+
+
+    await pool.query(
+      "INSERT INTO log (name, table_name, data) VALUES ($1, $2, $3::jsonb)",
+      ["deletenode", "nodes", JSON.stringify(result.rows[0])]
+    );
+
+    res.json({ message: "Node deleted", deleted: result.rows[0] });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 
-app.post("/addedges",async (req, res)=>{
 
-    try{
 
-        const{ from_node,to_node ,weight ,directed}=req.body;
-        const neweEdge=await pool.query ("INSERT INTO edges (from_node,to_node,weight,directed) VALUES ($1,$2,$3,$4)RETURNING*",
-            [from_node, to_node, weight,directed]
 
-        );
-        res.json(neweEdge.rows[0]);
-    }catch (err){
-        console.log(err);
-    }
+
+app.post("/addedges", async (req, res) => {
+  try {
+    const { from_node, to_node, weight, directed } = req.body;
+    const newEdge = await pool.query(
+      "INSERT INTO edges (from_node,to_node,weight,directed) VALUES ($1,$2,$3,$4) RETURNING *",
+      [from_node, to_node, weight, directed]
+    );
+
+
+    await pool.query(
+      "INSERT INTO log (name, table_name, data) VALUES ($1, $2, $3::jsonb)",
+      ["addedges", "edges", JSON.stringify(newEdge.rows[0])]
+    );
+
+    res.json(newEdge.rows[0]);
+  } catch (err) {
+    console.log(err);
+  }
 });
+
+app.post("/deletedges", async (req, res) => {
+  try {
+    const { id } = req.body;
+    const result = await pool.query(
+      "DELETE FROM edges WHERE edge_id=$1 RETURNING *",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(400).json({ message: "Edge not found" });
+    }
+
+    await pool.query(
+      "INSERT INTO log (name, table_name, data) VALUES ($1, $2, $3::jsonb)",
+      ["deletedges", "edges", JSON.stringify(result.rows[0])]
+    );
+
+    res.json({ message: "Edge deleted ", deleted: result.rows[0] });
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 
 app.get("/edges",async(req,res)=>{
     try{
@@ -83,25 +129,7 @@ app.get("/edges",async(req,res)=>{
     }
 });
 
-app.post("/deletedges",async(req,res)=>{
-    try{
-        const {id}=req.body;
 
-        const deletEdge="DELETE FROM edges WHERE edge_id=$1 RETURNING*  ";
-        const result=await pool.query(deletEdge,[id]);
-        if(!id){
-            return res.status(400).json({message : "not found id provided"});
-        }
-
-
-    res.json({
-    message: "Edge deleted successfully",
-    deletedEdge: result.rows[0],
-    });
-    }catch (err){
-        console.log(err);
-    }
-});
 
 app.post("/uppdatenodes", async (req, res) => {
   try {
@@ -126,6 +154,8 @@ app.post("/importnodes", async (req, res) => {
     }
 
     for (let n of nodes) {
+      if (!n || !n.position) continue;
+
       await pool.query(
         `INSERT INTO nodes (id, name, x, y)
          VALUES ($1, $2, $3, $4)
@@ -141,6 +171,7 @@ app.post("/importnodes", async (req, res) => {
 
   }
 });
+
 
 app.post("/importedges", async (req, res) => {
   try {
@@ -212,6 +243,71 @@ app.get("/exportall",async(req, res)=>{
     console.log(err)
   }
 });
+
+
+app.post("/undo", async (req, res) => {
+  const lastAction = await pool.query(
+    "SELECT * FROM log WHERE undone=false ORDER BY created_at DESC LIMIT 1"
+  );
+  if (lastAction.rows.length === 0) return res.json({ message: "Nothing to undo" });
+
+  const action = lastAction.rows[0];
+  const data = action.data;
+
+  if (action.name === "addnode") {
+    await pool.query("DELETE FROM nodes WHERE id=$1", [data.id]);
+  } else if (action.name === "deletenode") {
+    await pool.query(
+      "INSERT INTO nodes (id,name,x,y) VALUES ($1,$2,$3,$4)",
+      [data.id, data.name, data.x, data.y]
+    );
+  } else if (action.name === "addedges") {
+    await pool.query("DELETE FROM edges WHERE edge_id=$1", [data.edge_id]);
+  } else if (action.name === "deletedges") {
+    await pool.query(
+      "INSERT INTO edges (edge_id,from_node,to_node,weight,directed) VALUES ($1,$2,$3,$4,$5)",
+      [data.edge_id, data.from_node, data.to_node, data.weight, data.directed]
+    );
+  }
+
+  await pool.query("UPDATE log SET undone=true WHERE id=$1", [action.id]);
+  res.json({ message: "Undo successful" });
+});
+
+
+
+app.post("/redo", async (req, res) => {
+  const lastUndone = await pool.query(
+    "SELECT * FROM log WHERE undone=true ORDER BY created_at DESC LIMIT 1"
+  );
+  if (lastUndone.rows.length === 0) return res.json({ message: "Nothing to redo" });
+
+  const action = lastUndone.rows[0];
+  const data = action.data;
+
+  if (action.name === "addnode") {
+    await pool.query(
+      "INSERT INTO nodes (id,name,x,y) VALUES ($1,$2,$3,$4)",
+      [data.id, data.name, data.x, data.y]
+    );
+  } else if (action.name === "deletenode") {
+
+    await pool.query("DELETE FROM nodes WHERE id=$1", [data.id]);
+  } else if (action.name === "addedges") {
+
+    await pool.query(
+      "INSERT INTO edges (edge_id,from_node,to_node,weight,directed) VALUES ($1,$2,$3,$4,$5)",
+      [data.edge_id, data.from_node, data.to_node, data.weight, data.directed]
+    );
+  } else if (action.name === "deletedges") {
+    
+    await pool.query("DELETE FROM edges WHERE edge_id=$1", [data.edge_id]);
+  }
+
+  await pool.query("UPDATE log SET undone=false WHERE id=$1", [action.id]);
+  res.json({ message: "Redo successful" });
+});
+
 
 app.listen(5000, () => {
     console.log("Server has started on port 5000");
