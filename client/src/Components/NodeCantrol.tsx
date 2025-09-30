@@ -1,6 +1,6 @@
 import React from "react";
-import ImportCSV from "./imp/exp/import";
-import { exportall } from "./api";
+import ImportCSV from "../imp/exp/import";
+import { exportall } from "../api";
 
 
 interface NodeControlsProps {
@@ -8,6 +8,8 @@ interface NodeControlsProps {
   onDeleteNode: () => void;
   onDeleteEdge: () => void;
   onSaveCsv: () => void;
+
+  onForceLayout: () => void;
 
   nodeName: string;
   setNodeName: (name: string) => void;
@@ -28,11 +30,12 @@ export default function NodeControls({
   setNodeName,
   onImportNodes,
   onImportEdges,
+  onForceLayout,
   onUndo,
   onRedo,
 }: NodeControlsProps) {
   return (
-    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "1px" }}>
+    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
       <button onClick={onAddNode}>Add Node</button>
       <button onClick={onDeleteNode}>Delete Node</button>
       <button onClick={onDeleteEdge}>Delete Edge</button>
@@ -41,6 +44,8 @@ export default function NodeControls({
       {}
       <button onClick={onUndo}>Undo</button>
       <button onClick={onRedo}>Redo</button>
+
+      <button onClick={onForceLayout}>Force-directed</button>
 
       <input
         type="text"

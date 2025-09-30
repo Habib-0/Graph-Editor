@@ -1,14 +1,12 @@
-import  Nodes from  './Nodes'
-// import ThreeScene from './Threesince'
-function App(){
+import Nodes from "./Components/Nodes";
+import { ReactFlowProvider } from "@xyflow/react";
 
-
-  return <div>
-    <Nodes/>
-
-    
-
-
-    </div>
+function App() {
+  return (
+    <ReactFlowProvider>
+      <Nodes />
+    </ReactFlowProvider>
+  );
 }
-export default App
+
+export default App;

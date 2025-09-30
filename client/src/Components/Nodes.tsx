@@ -8,7 +8,9 @@ import {
 import type { NodeChange, EdgeChange, Connection, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import NodeControls from "./NodeCantrol";
-import * as api from "./api";
+import * as api from "../api";
+import runForceLayout from "../layouts/Forced"
+import { useReactFlow } from "@xyflow/react";
 
 
 interface Node {
@@ -25,6 +27,8 @@ export default function Nodes() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [nodeName, setNodeName] = useState("");
+
+    const reactFlowInstance = useReactFlow();
 
 
   const reloadGraph = async () => {
@@ -163,6 +167,37 @@ export default function Nodes() {
           console.log("Redo:", result);
           await reloadGraph();
         }}
+
+
+onForceLayout={() => {
+  runForceLayout(
+    nodes,
+    edges.map((e) => ({
+      source: parseInt(e.source.replace("n", "")),
+      target: parseInt(e.target.replace("n", "")),
+    })),
+    (newPositions) => {
+    setRfNodes(
+      newPositions.map((n: any) => ({
+        id: `n${n.id}`,
+        data: { label: n.name || "NO NAME" }, 
+        position: { x: n.x, y: n.y },
+        style: {
+          backgroundColor: "white",
+          border: "2px solid #333",
+          color: "black",
+        },
+      }))
+      );
+
+
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.2 });
+      }, 50);
+    }
+  );
+}}
+
       />
 
       <ReactFlow
