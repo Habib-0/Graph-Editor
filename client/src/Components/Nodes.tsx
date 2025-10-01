@@ -11,6 +11,7 @@ import NodeControls from "./NodeCantrol";
 import * as api from "../api";
 import runForceLayout from "../layouts/Forced"
 import { useReactFlow } from "@xyflow/react";
+import heriarchal from "../layouts/Heriarchal"
 
 
 interface Node {
@@ -169,6 +170,9 @@ export default function Nodes() {
         }}
 
 
+
+
+
 onForceLayout={() => {
   runForceLayout(
     nodes,
@@ -180,7 +184,7 @@ onForceLayout={() => {
     setRfNodes(
       newPositions.map((n: any) => ({
         id: `n${n.id}`,
-        data: { label: n.name || "NO NAME" }, 
+        data: { label: n.name || "NO NAME" },
         position: { x: n.x, y: n.y },
         style: {
           backgroundColor: "white",
@@ -197,6 +201,31 @@ onForceLayout={() => {
     }
   );
 }}
+
+
+
+
+onHierarchicalLayout={() => {
+  heriarchal(
+    nodes,
+    edges,
+    (newPositions) => {
+      setRfNodes(
+        newPositions.map((n: any) => ({
+          id: `n${n.id}`,
+          data: { label: n.name || "NO NAME" },
+          position: { x: n.x, y: n.y },
+          style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+        }))
+      );
+      setTimeout(() => {
+      reactFlowInstance.fitView({ padding: 0.2 });
+    }, 50);
+    }
+  );
+}}
+
+
 
       />
 

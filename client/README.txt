@@ -6,3 +6,5 @@ my mind and decided to use PostgreSQL because it was easier and similar to MySQL
 I connected my backend through a Node.js API, created a database, and set up tables for nodes and edges with their attributes.
 3 I was able to successfully connect my database to my project. To verify the connection, I clicked on "Add Node"
  in the frontend, and then checked my PostgreSQL terminal to see that the new node I added appeared in the database.
+4 then i added attributes to my nodes where i can write my nodes namne and saving the postition of my nodes on x and y and
+i could drag an edge to my nodes and it connected as an edge 

@@ -2,7 +2,6 @@ import React from "react";
 import ImportCSV from "../imp/exp/import";
 import { exportall } from "../api";
 
-
 interface NodeControlsProps {
   onAddNode: () => void;
   onDeleteNode: () => void;
@@ -10,12 +9,12 @@ interface NodeControlsProps {
   onSaveCsv: () => void;
 
   onForceLayout: () => void;
+  onHierarchicalLayout: () => void;
 
   nodeName: string;
   setNodeName: (name: string) => void;
   onImportNodes: (nodes: any[]) => void;
   onImportEdges?: (edges: any[]) => void;
-
 
   onUndo: () => void;
   onRedo: () => void;
@@ -28,24 +27,69 @@ export default function NodeControls({
   onSaveCsv,
   nodeName,
   setNodeName,
+  onHierarchicalLayout,
   onImportNodes,
   onImportEdges,
   onForceLayout,
   onUndo,
   onRedo,
 }: NodeControlsProps) {
+
+  const handleLayoutChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "force") onForceLayout();
+    if (value === "hierarchical") onHierarchicalLayout();
+  };
+
+
+  const handleDataChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "import") {
+
+      document.getElementById("importBtn")?.click();
+    }
+    if (value === "export") exportall();
+    if (value === "save") onSaveCsv();
+
+
+  };
+
+
+  // const nodesChange=(e :React.ChangeEvent<HTMLSelectElement>)=>{
+  //   const value=e.target.value;
+  //     if(value==="AddNode")onAddNode();
+  //     if(value==="DeleteNode")onDeleteNode();
+  //     if(value==="DeleteEdge")onDeleteEdge();
+
+  //   };
+
   return (
-    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
-      <button onClick={onAddNode}>Add Node</button>
-      <button onClick={onDeleteNode}>Delete Node</button>
-      <button onClick={onDeleteEdge}>Delete Edge</button>
-      <button onClick={onSaveCsv}>Save CSV to Database</button>
-      <button onClick={exportall}>Export Nodes + Edges</button>
-      {}
+    <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", marginBottom: "10px" }}>
+
+      <button onClick={onAddNode}>AddNode</button>
+      <button onClick={onDeleteNode}>DeleteNode</button>
+      <button onClick={onDeleteEdge}>DeleteEdge</button>
+
+
+
+
       <button onClick={onUndo}>Undo</button>
       <button onClick={onRedo}>Redo</button>
 
-      <button onClick={onForceLayout}>Force-directed</button>
+
+      <select defaultValue="" onChange={handleLayoutChange}>
+        <option value="force">Force-directed</option>
+        <option value="hierarchical">Hierarchical</option>
+      </select>
+
+
+
+      <select defaultValue="" onChange={handleDataChange}>
+        <option value="import">Import CSV</option>
+        <option value="export">Export Nodes + Edges</option>
+        <option value="save">Save CSV to Database</option>
+      </select>
+
 
       <input
         type="text"
@@ -54,7 +98,14 @@ export default function NodeControls({
         placeholder="Write name of the node"
       />
 
-      <ImportCSV onImportNodes={onImportNodes} onImportEdges={onImportEdges} />
+
+      <div style={{ display: "none" }}>
+        <ImportCSV
+          onImportNodes={onImportNodes}
+          onImportEdges={onImportEdges}
+        />
+        <button id="importBtn">Import Hidden Trigger</button>
+      </div>
     </div>
   );
 }

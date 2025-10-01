@@ -16,7 +16,7 @@ export default function runForceLayout(
     .force("link", d3.forceLink(simulationEdges).id((d: any) => d.id).distance(100))
     .force("charge", d3.forceManyBody().strength(-300))
     .force("center", d3.forceCenter(width / 2, height / 2));
-    
+
     simulation.alphaDecay(0.05);
 
 
