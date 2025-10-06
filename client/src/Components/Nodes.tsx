@@ -12,6 +12,8 @@ import * as api from "../api";
 import runForceLayout from "../layouts/Forced"
 import { useReactFlow } from "@xyflow/react";
 import heriarchal from "../layouts/Heriarchal"
+import circularLayout from "../layouts/Circuler"
+import { label } from "three/tsl";
 
 
 interface Node {
@@ -27,6 +29,9 @@ export default function Nodes() {
   const [rfNodes, setRfNodes] = useState<any[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
+
+
+
   const [nodeName, setNodeName] = useState("");
 
     const reactFlowInstance = useReactFlow();
@@ -84,11 +89,47 @@ export default function Nodes() {
       parseInt(connection.target!.replace("n", ""))
     );
   }, []);
+const handleSearch = (query: string) => {
+  if (!query) {
+
+    setRfNodes(
+      nodes.map((n: Node) => ({
+        id: `n${n.id}`,
+        data: { label: n.name },
+        position: { x: n.x, y: n.y },
+        style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+      }))
+    );
+    return;
+  }
+
+
+  const filtered = nodes.filter((n) =>
+    n.name.toLowerCase().includes(query.toLowerCase())
+  );
+
+
+  setRfNodes(
+    filtered.map((n: Node) => ({
+      id: `n${n.id}`,
+      data: { label: n.name },
+      position: { x: n.x, y: n.y },
+      style: {
+        backgroundColor: "#de1010ff",
+        border: "3px solid orange",
+        color: "black",
+      },
+    }))
+  );
+};
+
+
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <NodeControls
         nodeName={nodeName}
+         search={handleSearch}
         setNodeName={setNodeName}
         onAddNode={async () => {
           const saved = await api.addNode(nodeName);
@@ -207,6 +248,26 @@ onForceLayout={() => {
 
 onHierarchicalLayout={() => {
   heriarchal(
+    nodes,
+    edges,
+    (newPositions) => {
+      setRfNodes(
+        newPositions.map((n: any) => ({
+          id: `n${n.id}`,
+          data: { label: n.name || "NO NAME" },
+          position: { x: n.x, y: n.y },
+          style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+        }))
+      );
+      setTimeout(() => {
+      reactFlowInstance.fitView({ padding: 0.2 });
+    }, 50);
+    }
+  );
+}}
+
+onCircularLayout={() => {
+  circularLayout(
     nodes,
     edges,
     (newPositions) => {

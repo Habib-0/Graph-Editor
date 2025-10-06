@@ -10,9 +10,11 @@ interface NodeControlsProps {
 
   onForceLayout: () => void;
   onHierarchicalLayout: () => void;
+  onCircularLayout: () => void;
 
   nodeName: string;
   setNodeName: (name: string) => void;
+  search:(query:string)=>void;
   onImportNodes: (nodes: any[]) => void;
   onImportEdges?: (edges: any[]) => void;
 
@@ -31,6 +33,8 @@ export default function NodeControls({
   onImportNodes,
   onImportEdges,
   onForceLayout,
+  onCircularLayout,
+  search,
   onUndo,
   onRedo,
 }: NodeControlsProps) {
@@ -39,6 +43,7 @@ export default function NodeControls({
     const value = e.target.value;
     if (value === "force") onForceLayout();
     if (value === "hierarchical") onHierarchicalLayout();
+    if(value==="circuler")onCircularLayout();
   };
 
 
@@ -53,6 +58,7 @@ export default function NodeControls({
 
 
   };
+
 
 
   // const nodesChange=(e :React.ChangeEvent<HTMLSelectElement>)=>{
@@ -80,6 +86,7 @@ export default function NodeControls({
       <select defaultValue="" onChange={handleLayoutChange}>
         <option value="force">Force-directed</option>
         <option value="hierarchical">Hierarchical</option>
+        <option value="circuler">Circuler</option>
       </select>
 
 
@@ -96,6 +103,13 @@ export default function NodeControls({
         value={nodeName}
         onChange={(e) => setNodeName(e.target.value)}
         placeholder="Write name of the node"
+      />
+
+      <input
+      type ="text"
+      placeholder="Search for the node"
+      onChange={(e)=>search(e.target.value)}
+
       />
 
 

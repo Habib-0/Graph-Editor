@@ -300,12 +300,30 @@ app.post("/redo", async (req, res) => {
       [data.edge_id, data.from_node, data.to_node, data.weight, data.directed]
     );
   } else if (action.name === "deletedges") {
-    
+
     await pool.query("DELETE FROM edges WHERE edge_id=$1", [data.edge_id]);
   }
 
   await pool.query("UPDATE log SET undone=false WHERE id=$1", [action.id]);
   res.json({ message: "Redo successful" });
+});
+
+
+
+app.get("/search",async(req,res)=>{
+  const {query}=req.body;
+  try{
+
+       const result = await pool.query(
+      "SELECT * FROM nodes WHERE name ILIKE $1",
+      [`%${query}%`]
+    );
+
+  res.json(result.rows);
+
+  }catch(err){
+    console.log(err);
+  }
 });
 
 
