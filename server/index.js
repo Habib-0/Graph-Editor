@@ -310,21 +310,6 @@ app.post("/redo", async (req, res) => {
 
 
 
-app.get("/search",async(req,res)=>{
-  const {query}=req.body;
-  try{
-
-       const result = await pool.query(
-      "SELECT * FROM nodes WHERE name ILIKE $1",
-      [`%${query}%`]
-    );
-
-  res.json(result.rows);
-
-  }catch(err){
-    console.log(err);
-  }
-});
 
 
 app.listen(5000, () => {

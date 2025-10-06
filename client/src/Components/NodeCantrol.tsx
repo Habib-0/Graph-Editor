@@ -11,6 +11,7 @@ interface NodeControlsProps {
   onForceLayout: () => void;
   onHierarchicalLayout: () => void;
   onCircularLayout: () => void;
+  onGridLayout:()=>void;
 
   nodeName: string;
   setNodeName: (name: string) => void;
@@ -30,6 +31,7 @@ export default function NodeControls({
   nodeName,
   setNodeName,
   onHierarchicalLayout,
+  onGridLayout,
   onImportNodes,
   onImportEdges,
   onForceLayout,
@@ -44,6 +46,7 @@ export default function NodeControls({
     if (value === "force") onForceLayout();
     if (value === "hierarchical") onHierarchicalLayout();
     if(value==="circuler")onCircularLayout();
+    if(value==="gridlayout")onGridLayout();
   };
 
 
@@ -87,6 +90,7 @@ export default function NodeControls({
         <option value="force">Force-directed</option>
         <option value="hierarchical">Hierarchical</option>
         <option value="circuler">Circuler</option>
+        <option value="gridlayout">Grid</option>
       </select>
 
 

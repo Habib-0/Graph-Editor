@@ -104,8 +104,4 @@ export async function redo() {
   return await res.json();
 }
 
-export async function search(query: string) {
-  const res = await fetch(`http://localhost:5000/search?query=${encodeURIComponent(query)}`);
-  return res.json();
-}
 

@@ -13,6 +13,7 @@ import runForceLayout from "../layouts/Forced"
 import { useReactFlow } from "@xyflow/react";
 import heriarchal from "../layouts/Heriarchal"
 import circularLayout from "../layouts/Circuler"
+import gridlayout from "../layouts/Grid"
 import { label } from "three/tsl";
 
 
@@ -285,6 +286,27 @@ onCircularLayout={() => {
     }
   );
 }}
+
+onGridLayout={() => {
+  gridlayout(
+    nodes,
+    edges,
+    (newPositions) => {
+      setRfNodes(
+        newPositions.map((n: any) => ({
+          id: `n${n.id}`,
+          data: { label: n.name || "NO NAME" },
+          position: { x: n.x, y: n.y },
+          style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+        }))
+      );
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.2 });
+      }, 50);
+    }
+  );
+}}
+
 
 
 
