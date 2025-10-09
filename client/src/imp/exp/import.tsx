@@ -38,8 +38,10 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
 
         const firstRow = results.data[0];
 
-        
-        if ((firstRow.id && firstRow.name) || (firstRow.name && firstRow.x !== undefined && firstRow.y !== undefined)) {
+        if (
+          (firstRow.id && firstRow.name) ||
+          (firstRow.name && firstRow.x !== undefined && firstRow.y !== undefined)
+        ) {
           const parsedNodes: CSVNode[] = results.data.map((row: any, i: number) => ({
             id: row.id ? Number(row.id) : i + 1,
             name: row.name,
@@ -49,10 +51,7 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
             },
           }));
           onImportNodes?.(parsedNodes);
-        }
-
-
-        else if (firstRow.edge_id || (firstRow.from_node && firstRow.to_node)) {
+        } else if (firstRow.edge_id || (firstRow.from_node && firstRow.to_node)) {
           const parsedEdges: CSVEdge[] = results.data.map((row: any, i: number) => ({
             edge_id: row.edge_id ? Number(row.edge_id) : i + 1,
             from_node: Number(row.from_node),

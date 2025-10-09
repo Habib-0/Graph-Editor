@@ -9,13 +9,12 @@ import type { NodeChange, EdgeChange, Connection, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import NodeControls from "./NodeCantrol";
 import * as api from "../api";
-import runForceLayout from "../layouts/Forced"
+import runForceLayout from "../layouts/Forced";
 import { useReactFlow } from "@xyflow/react";
-import heriarchal from "../layouts/Heriarchal"
-import circularLayout from "../layouts/Circuler"
-import gridlayout from "../layouts/Grid"
-import { label } from "three/tsl";
-
+import heriarchal from "../layouts/Heriarchal";
+import circularLayout from "../layouts/Circuler";
+import gridlayout from "../layouts/Grid";
+import { dijkstraWithPath } from "../algoritm/dijkstra";
 
 interface Node {
   id: number;
@@ -30,12 +29,9 @@ export default function Nodes() {
   const [rfNodes, setRfNodes] = useState<any[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
-
-
-
   const [nodeName, setNodeName] = useState("");
 
-    const reactFlowInstance = useReactFlow();
+  const reactFlowInstance = useReactFlow();
 
 
   const reloadGraph = async () => {
@@ -51,6 +47,7 @@ export default function Nodes() {
         style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
       }))
     );
+
     setEdges(
       updatedEdges.map((e: any) => ({
         id: `e${e.edge_id}`,
@@ -90,48 +87,47 @@ export default function Nodes() {
       parseInt(connection.target!.replace("n", ""))
     );
   }, []);
-const handleSearch = (query: string) => {
-  if (!query) {
+
+
+  const handleSearch = (query: string) => {
+    if (!query) {
+      setRfNodes(
+        nodes.map((n: Node) => ({
+          id: `n${n.id}`,
+          data: { label: n.name },
+          position: { x: n.x, y: n.y },
+          style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+        }))
+      );
+      return;
+    }
+
+    const filtered = nodes.filter((n) =>
+      n.name.toLowerCase().includes(query.toLowerCase())
+    );
 
     setRfNodes(
-      nodes.map((n: Node) => ({
+      filtered.map((n: Node) => ({
         id: `n${n.id}`,
         data: { label: n.name },
         position: { x: n.x, y: n.y },
-        style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+        style: {
+          backgroundColor: "#de1010ff",
+          border: "3px solid orange",
+          color: "black",
+        },
       }))
     );
-    return;
-  }
-
-
-  const filtered = nodes.filter((n) =>
-    n.name.toLowerCase().includes(query.toLowerCase())
-  );
-
-
-  setRfNodes(
-    filtered.map((n: Node) => ({
-      id: `n${n.id}`,
-      data: { label: n.name },
-      position: { x: n.x, y: n.y },
-      style: {
-        backgroundColor: "#de1010ff",
-        border: "3px solid orange",
-        color: "black",
-      },
-    }))
-  );
-};
-
-
+  };
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <NodeControls
         nodeName={nodeName}
-         search={handleSearch}
+        search={handleSearch}
         setNodeName={setNodeName}
+
+
         onAddNode={async () => {
           const saved = await api.addNode(nodeName);
           const newNode: Node = {
@@ -150,7 +146,11 @@ const handleSearch = (query: string) => {
               style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
             },
           ]);
+          setTimeout(() => {
+            reactFlowInstance.fitView({ padding: 0.2 });
+          }, 100);
         }}
+
         onDeleteNode={async () => {
           if (!selectedNode) return;
           const id = parseInt(selectedNode.replace("n", ""));
@@ -161,6 +161,8 @@ const handleSearch = (query: string) => {
           );
           setSelectedNode(null);
         }}
+
+
         onDeleteEdge={async () => {
           if (!selectedEdge) return;
           const id = parseInt(selectedEdge.replace("e", ""));
@@ -168,6 +170,7 @@ const handleSearch = (query: string) => {
           setEdges((prev) => prev.filter((e) => e.id !== selectedEdge));
           setSelectedEdge(null);
         }}
+
         onSaveCsv={async () => {
           await api.saveCsvToDB(nodes);
           const edgesToSave = edges.map((e) => ({
@@ -178,6 +181,7 @@ const handleSearch = (query: string) => {
           }));
           await api.saveEdge(edgesToSave);
         }}
+
         onImportNodes={(csvNodes) => {
           setNodes(csvNodes);
           setRfNodes(
@@ -189,6 +193,7 @@ const handleSearch = (query: string) => {
             }))
           );
         }}
+
         onImportEdges={(csvEdges) => {
           setEdges(
             csvEdges.map((e) => ({
@@ -205,111 +210,112 @@ const handleSearch = (query: string) => {
           console.log("Undo:", result);
           await reloadGraph();
         }}
+
         onRedo={async () => {
           const result = await api.redo();
           console.log("Redo:", result);
           await reloadGraph();
         }}
 
+       
+        onForceLayout={() => {
+          runForceLayout(
+            nodes,
+            edges.map((e) => ({
+              source: parseInt(e.source.replace("n", "")),
+              target: parseInt(e.target.replace("n", "")),
+            })),
+            (newPositions) => {
+              setRfNodes(
+                newPositions.map((n: any) => ({
+                  id: `n${n.id}`,
+                  data: { label: n.name || "NO NAME" },
+                  position: { x: n.x, y: n.y },
+                  style: {
+                    backgroundColor: "white",
+                    border: "2px solid #333",
+                    color: "black",
+                  },
+                }))
+              );
+              setTimeout(() => reactFlowInstance.fitView({ padding: 0.2 }), 50);
+            }
+          );
+        }}
+
+        onHierarchicalLayout={() => {
+          heriarchal(nodes, edges, (newPositions) => {
+            setRfNodes(
+              newPositions.map((n: any) => ({
+                id: `n${n.id}`,
+                data: { label: n.name || "NO NAME" },
+                position: { x: n.x, y: n.y },
+                style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+              }))
+            );
+            setTimeout(() => reactFlowInstance.fitView({ padding: 0.2 }), 50);
+          });
+        }}
+
+        onCircularLayout={() => {
+          circularLayout(nodes, edges, (newPositions) => {
+            setRfNodes(
+              newPositions.map((n: any) => ({
+                id: `n${n.id}`,
+                data: { label: n.name || "NO NAME" },
+                position: { x: n.x, y: n.y },
+                style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+              }))
+            );
+            setTimeout(() => reactFlowInstance.fitView({ padding: 0.2 }), 50);
+          });
+        }}
+
+        onGridLayout={() => {
+          gridlayout(nodes, edges, (newPositions) => {
+            setRfNodes(
+              newPositions.map((n: any) => ({
+                id: `n${n.id}`,
+                data: { label: n.name || "NO NAME" },
+                position: { x: n.x, y: n.y },
+                style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
+              }))
+            );
+            setTimeout(() => reactFlowInstance.fitView({ padding: 0.2 }), 50);
+          });
+        }}
 
 
-
-
-onForceLayout={() => {
-  runForceLayout(
-    nodes,
-    edges.map((e) => ({
-      source: parseInt(e.source.replace("n", "")),
-      target: parseInt(e.target.replace("n", "")),
-    })),
-    (newPositions) => {
-    setRfNodes(
-      newPositions.map((n: any) => ({
-        id: `n${n.id}`,
-        data: { label: n.name || "NO NAME" },
-        position: { x: n.x, y: n.y },
-        style: {
-          backgroundColor: "white",
-          border: "2px solid #333",
-          color: "black",
-        },
-      }))
-      );
-
-
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.2 });
-      }, 50);
-    }
-  );
-}}
-
-
-
-
-onHierarchicalLayout={() => {
-  heriarchal(
-    nodes,
-    edges,
-    (newPositions) => {
-      setRfNodes(
-        newPositions.map((n: any) => ({
-          id: `n${n.id}`,
-          data: { label: n.name || "NO NAME" },
-          position: { x: n.x, y: n.y },
-          style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
-        }))
-      );
-      setTimeout(() => {
-      reactFlowInstance.fitView({ padding: 0.2 });
-    }, 50);
-    }
-  );
-}}
-
-onCircularLayout={() => {
-  circularLayout(
-    nodes,
-    edges,
-    (newPositions) => {
-      setRfNodes(
-        newPositions.map((n: any) => ({
-          id: `n${n.id}`,
-          data: { label: n.name || "NO NAME" },
-          position: { x: n.x, y: n.y },
-          style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
-        }))
-      );
-      setTimeout(() => {
-      reactFlowInstance.fitView({ padding: 0.2 });
-    }, 50);
-    }
-  );
-}}
-
-onGridLayout={() => {
-  gridlayout(
-    nodes,
-    edges,
-    (newPositions) => {
-      setRfNodes(
-        newPositions.map((n: any) => ({
-          id: `n${n.id}`,
-          data: { label: n.name || "NO NAME" },
-          position: { x: n.x, y: n.y },
-          style: { backgroundColor: "white", border: "2px solid #333", color: "black" },
-        }))
-      );
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.2 });
-      }, 50);
-    }
-  );
-}}
-
-
-
-
+        onShortestPath={() => {
+          if (nodes.length === 0 || edges.length === 0) return;
+          const startId = nodes[0].id;
+          const endId = nodes[nodes.length - 1].id;
+          const { distances, path } = dijkstraWithPath(nodes, edges, startId, endId);
+          console.log("Kortaste vägen:", path, "Distans:", distances[endId]);
+          setRfNodes((prev) =>
+            prev.map((n) => {
+              const nodeId = parseInt(n.id.replace("n", ""));
+              if (path.includes(nodeId)) {
+                return {
+                  ...n,
+                  style: {
+                    ...n.style,
+                    backgroundColor: "#ffbf00",
+                    border: "3px solid red",
+                  },
+                };
+              }
+              return {
+                ...n,
+                style: {
+                  ...n.style,
+                  backgroundColor: "white",
+                  border: "2px solid #333",
+                },
+              };
+            })
+          );
+        }}
       />
 
       <ReactFlow
