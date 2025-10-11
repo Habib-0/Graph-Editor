@@ -13,6 +13,7 @@ interface NodeControlsProps {
   onCircularLayout: () => void;
   onGridLayout: () => void;
 
+
   nodeName: string;
   setNodeName: (name: string) => void;
   search: (query: string) => void;
@@ -43,9 +44,10 @@ export default function NodeControls({
 }: NodeControlsProps) {
   const handleLayoutChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    if (value === "force") onForceLayout();
+
     if (value === "hierarchical") onHierarchicalLayout();
     if (value === "circuler") onCircularLayout();
+    if (value === "force") onForceLayout();
     if (value === "gridlayout") onGridLayout();
   };
 
@@ -65,9 +67,10 @@ export default function NodeControls({
       <button onClick={onRedo}>Redo</button>
 
       <select defaultValue="" onChange={handleLayoutChange}>
-        <option value="force">Force-directed</option>
+
         <option value="hierarchical">Hierarchical</option>
         <option value="circuler">Circular</option>
+         <option value="force">Force-directed</option>
         <option value="gridlayout">Grid</option>
       </select>
 
