@@ -309,6 +309,56 @@ app.post("/redo", async (req, res) => {
 });
 
 
+app.put("/edges/by-nodes", async (req, res) => {
+  const { from, to, weight } = req.body;
+  try {
+    const result = await pool.query(
+      `
+      UPDATE edges
+      SET weight = $1
+      WHERE (from_node = $2 AND to_node = $3)
+         OR (from_node = $3 AND to_node = $2)
+      RETURNING *;
+      `,
+      [Number(weight), Number(from), Number(to)]
+    );
+
+    if (result.rowCount === 0) {
+      console.warn("Ingen edge uppdaterades:", from, to);
+      return res.json({ success: false });
+    }
+
+    // Lägg till i log-tabellen (så Undo/Redo funkar)
+    await pool.query(
+      "INSERT INTO log (name, table_name, data) VALUES ($1, $2, $3::jsonb)",
+      ["updateedge", "edges", JSON.stringify(result.rows[0])]
+    );
+
+    res.json({ success: true, edge: result.rows[0] });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+
+
+app.put("/edges/:edge_id/weight", async (req, res) => {
+  const { edge_id } = req.params;
+  const { weight } = req.body;
+  try {
+    const r = await pool.query(
+      "UPDATE edges SET weight=$1 WHERE edge_id=$2",
+      [Number(weight), Number(edge_id)]
+    );
+    res.json({ success: r.rowCount > 0 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+
 
 
 

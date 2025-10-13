@@ -35,19 +35,20 @@ export async function deleteEdge(id: number) {
   return await res.json();
 }
 
-export async function addEdge(from: number, to: number) {
+export async function addEdge(from: number, to: number, weight: number) {
   const res = await fetch("http://localhost:5000/addedges", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       from_node: from,
       to_node: to,
-      weight: 0,
+      weight,
       directed: false,
     }),
   });
   return await res.json();
 }
+
 
 export async function saveCsvToDB(nodes: any[]) {
   await fetch("http://localhost:5000/importnodes", {
@@ -104,4 +105,11 @@ export async function redo() {
   return await res.json();
 }
 
-
+export async function updateEdgeWeight(edgeId: number, weight: number) {
+  const res = await fetch(`http://localhost:5000/edges/${edgeId}/weight`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ weight }),
+  });
+  return res.json(); 
+}

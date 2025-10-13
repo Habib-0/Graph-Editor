@@ -15,7 +15,7 @@ export default function SmoothEdge({
   sourcePosition,
   targetPosition,
   label,
-  markerEnd,      
+  markerEnd,
   animated,
 }: any) {
   const [path, labelX, labelY] = getSmoothStepPath({

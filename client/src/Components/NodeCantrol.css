@@ -1,0 +1,71 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #111; /* mörk bakgrund */
+  padding: 12px 16px;
+  border-bottom: 2px solid #222;
+  font-family: "Segoe UI", sans-serif;
+  justify-content: space-between;
+  color: #f1f1f1;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.toolbar-title {
+  font-weight: 600;
+  color: #f1f1f1;
+  margin-right: 6px;
+  font-size: 0.9rem;
+}
+
+.toolbar button {
+  background: #0078d7;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.toolbar button:hover {
+  background: #005fa3;
+}
+
+.toolbar select,
+.toolbar input {
+  padding: 6px 8px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #222;
+  color: #f1f1f1;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.toolbar select:focus,
+.toolbar input:focus {
+  border-color: #0078d7;
+}
+
+.toolbar input {
+  width: 160px;
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

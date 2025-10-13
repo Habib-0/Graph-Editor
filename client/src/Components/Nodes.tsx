@@ -4,6 +4,9 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   addEdge as rfAddEdge,
+    MiniMap,
+  Controls,
+  Background,
 } from "@xyflow/react";
 import type { NodeChange, EdgeChange, Connection, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -17,6 +20,8 @@ import gridlayout from "../layouts/Grid";
 import { dijkstraWithPath } from "../algoritm/dijkstra";
 import SmoothEdge from "./smothedge";
 import CircleNode from "./circlenodes";
+
+
 
 interface Node {
   id: number;
@@ -70,6 +75,10 @@ const [endNode, setEndNode] = useState<number | null>(null);
 
   };
 
+
+
+
+
   const edgeTypes = {
   smooth: SmoothEdge,
 };
@@ -102,18 +111,22 @@ const nodeTypes = {
   );
 
 const onConnect = useCallback((connection: Connection) => {
+  const wStr = prompt(" set Weight?", "1");
+  const weight = wStr === null ? 1 : Math.max(0, Number(wStr) || 1);
+
   const newEdge = {
     ...connection,
     id: `e${Date.now()}`,
     type: "smooth",
-    label: "1",
+    label: String(weight),
   };
 
   setEdges((prev) => [...prev, newEdge]);
 
   api.addEdge(
-    parseInt(connection.source!.replace("n", "")),
-    parseInt(connection.target!.replace("n", ""))
+    parseInt(connection.source!.replace("n", ""), 10),
+    parseInt(connection.target!.replace("n", ""), 10),
+    weight
   );
 }, []);
 
@@ -248,6 +261,48 @@ const onShortestPath = () => {
   );
 };
 
+const onEditSelectedEdgeWeight = useCallback(async () => {
+  if (!selectedEdge) {
+
+    return;
+  }
+
+
+  const edge = edges.find((e) => e.id === selectedEdge);
+  if (!edge) return;
+
+  const currentWeight = Number(edge.label) || 0;
+  const input = prompt(
+    `new weight for the edge ${edge.source} → ${edge.target}:`,
+    String(currentWeight)
+  );
+
+  if (input === null) return;
+
+  const newWeight = Number(input);
+  if (!Number.isFinite(newWeight) || newWeight < 0) {
+
+    return;
+  }
+
+
+  setEdges((prev) =>
+    prev.map((e) =>
+      e.id === selectedEdge ? { ...e, label: String(newWeight) } : e
+    )
+  );
+
+
+  const edgeId = parseInt(edge.id.replace("e", ""), 10);
+const res = await api.updateEdgeWeight(edgeId, newWeight);
+  if (res.success) {
+
+  } else {
+    alert("couldnot find in databae");
+  }
+}, [selectedEdge, edges]);
+
+
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
@@ -256,6 +311,7 @@ const onShortestPath = () => {
         search={handleSearch}
         setNodeName={setNodeName}
         onShortestPath={onShortestPath}
+        onEditEdgeWeight={onEditSelectedEdgeWeight}
 
 
         onAddNode={async () => {
@@ -452,6 +508,9 @@ onHierarchicalLayout={() => {
 
 
 
+
+
+
       />
 
       {}
@@ -480,7 +539,13 @@ onHierarchicalLayout={() => {
   onNodesChange={onNodesChange}
   onEdgesChange={onEdgesChange}
   onConnect={onConnect}
-  onEdgeClick={(_, edge: Edge) => setSelectedEdge(edge.id)}
+
+ onEdgeClick={(_, edge: Edge) => {
+  console.log("EDGE CLICKED:", edge.id);
+  setSelectedEdge(edge.id);
+
+}}
+
   onNodeClick={(_, node) => {
   const id = parseInt(node.id.replace("n", ""));
   setSelectedNode(node.id);
@@ -498,10 +563,42 @@ onHierarchicalLayout={() => {
   }
 }}
 
+
+
   fitView
   edgeTypes={{ smooth: SmoothEdge }}
    nodeTypes={nodeTypes}
 />
+
+  {}
+  <Background gap={16} size={1} />
+
+  {}
+<MiniMap
+  zoomable
+  pannable
+
+  style={{
+    background: "rgba(240, 228, 228, 0.6)",
+    border: "1px solid #444",
+    borderRadius: 12,
+    boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+    width: 220,
+    height: 140,
+    right: 16,
+    bottom: 16,
+    zIndex: 10,
+  }}
+
+  maskColor="rgba(248, 244, 244, 1)"
+  nodeStrokeWidth={2}
+  nodeBorderRadius={40}
+
+  nodeStrokeColor={(n) => (n.id === selectedNode ? "#9dff00ff" : "#f3ebebff")}
+
+  nodeColor={(n) => (n?.style?.backgroundColor as string) || "#e91c1cff"}
+/>
+
     </div>
   );
 }
