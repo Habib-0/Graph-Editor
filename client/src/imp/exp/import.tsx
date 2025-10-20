@@ -21,6 +21,40 @@ interface ImportProps {
   onImportEdges?: (edges: CSVEdge[]) => void;
 }
 
+
+function circilelay(nodes: CSVNode[]) {
+  const n = nodes.length;
+  const radius = 300;
+  const centerX = 500;
+  const centerY = 300;
+
+  return nodes.map((node, i) => {
+    const angle = (2 * Math.PI * i) / n;
+    return {
+      ...node,
+      position: {
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle),
+      },
+    };
+  });
+}
+
+function autoGridLayout(nodes: CSVNode[], cols = 5, spacing = 150) {
+  return nodes.map((node, i) => {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    return {
+      ...node,
+      position: {
+        x: col * spacing + 100,
+        y: row * spacing + 100,
+      },
+    };
+  });
+}
+
+
 export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -40,18 +74,37 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
 
         if (
           (firstRow.id && firstRow.name) ||
-          (firstRow.name && firstRow.x !== undefined && firstRow.y !== undefined)
+          (firstRow.name && (firstRow.x !== undefined || firstRow.y !== undefined))
         ) {
           const parsedNodes: CSVNode[] = results.data.map((row: any, i: number) => ({
             id: row.id ? Number(row.id) : i + 1,
-            name: row.name,
+            name: row.name || `Node ${i + 1}`,
             position: {
-              x: row.x ? Number(row.x) : Math.random() * 500,
-              y: row.y ? Number(row.y) : Math.random() * 500,
+              x: row.x !== undefined && row.x !== "" ? Number(row.x) : NaN,
+              y: row.y !== undefined && row.y !== "" ? Number(row.y) : NaN,
             },
           }));
-          onImportNodes?.(parsedNodes);
-        } else if (firstRow.edge_id || (firstRow.from_node && firstRow.to_node)) {
+
+
+          const missingPositions = parsedNodes.some(
+            (n) => isNaN(n.position.x) || isNaN(n.position.y)
+          );
+
+          let finalNodes = parsedNodes;
+
+          if (missingPositions) {
+
+            finalNodes =
+              parsedNodes.length < 15
+                ? circilelay(parsedNodes)
+                : autoGridLayout(parsedNodes);
+          }
+
+          onImportNodes?.(finalNodes);
+        }
+
+
+        else if (firstRow.edge_id || (firstRow.from_node && firstRow.to_node)) {
           const parsedEdges: CSVEdge[] = results.data.map((row: any, i: number) => ({
             edge_id: row.edge_id ? Number(row.edge_id) : i + 1,
             from_node: Number(row.from_node),
@@ -59,6 +112,7 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
             weight: row.weight ? Number(row.weight) : 1,
             directed: row.directed?.toString().toLowerCase() === "true",
           }));
+
           onImportEdges?.(parsedEdges);
         }
       },

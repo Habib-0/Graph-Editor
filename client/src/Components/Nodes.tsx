@@ -39,6 +39,8 @@ export default function Nodes() {
   const [nodeName, setNodeName] = useState("");
   const [startNode, setStartNode] = useState<number | null>(null);
 const [endNode, setEndNode] = useState<number | null>(null);
+const [analyticsResult, setAnalyticsResult] = useState<{ title: string; data: any[] } | null>(null);
+
 
   const reactFlowInstance = useReactFlow();
 
@@ -74,6 +76,11 @@ const [endNode, setEndNode] = useState<number | null>(null);
 
 
   };
+
+  interface NOdecantrol{
+    nodes:any[];
+    edges:any[];
+  }
 
 
 
@@ -304,14 +311,83 @@ const res = await api.updateEdgeWeight(edgeId, newWeight);
 
 
 
+const handleDegreeAnalysis = useCallback(() => {
+  const degreeMap: Record<number, number> = {};
+
+  edges.forEach((e) => {
+    const from = parseInt(e.source.replace("n", ""));
+    const to = parseInt(e.target.replace("n", ""));
+    degreeMap[from] = (degreeMap[from] || 0) + 1;
+    degreeMap[to] = (degreeMap[to] || 0) + 1;
+  });
+
+  const data = nodes.map((n) => ({
+    Node: n.name,
+    Degree: degreeMap[n.id] || 0,
+  }));
+
+  setAnalyticsResult({ title: "Degree Centrality", data });
+}, [nodes, edges]);
+
+
+
+
+const handlePageRankAnalysis = useCallback(() => {
+  const damping = 0.85;
+  const numNodes = nodes.length;
+  const ranks: Record<number, number> = {};
+  const outgoing: Record<number, number[]> = {};
+
+  nodes.forEach((n) => {
+    ranks[n.id] = 1 / numNodes;
+    outgoing[n.id] = [];
+  });
+
+  edges.forEach((e) => {
+    const from = parseInt(e.source.replace("n", ""));
+    const to = parseInt(e.target.replace("n", ""));
+    outgoing[from].push(to);
+  });
+
+  for (let i = 0; i < 20; i++) {
+    const newRanks: Record<number, number> = {};
+    nodes.forEach((n) => {
+      let rankSum = 0;
+      nodes.forEach((m) => {
+        if (outgoing[m.id].includes(n.id)) {
+          rankSum += ranks[m.id] / outgoing[m.id].length;
+        }
+      });
+      newRanks[n.id] = (1 - damping) / numNodes + damping * rankSum;
+    });
+    Object.assign(ranks, newRanks);
+  }
+
+  const data = nodes.map((n) => ({
+    Node: n.name,
+    PageRank: ranks[n.id].toFixed(4),
+  }));
+
+  setAnalyticsResult({ title: "PageRank", data });
+}, [nodes, edges]);
+
+
+
+
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <NodeControls
         nodeName={nodeName}
+        nodes={nodes}
+        edges={edges}
         search={handleSearch}
         setNodeName={setNodeName}
         onShortestPath={onShortestPath}
         onEditEdgeWeight={onEditSelectedEdgeWeight}
+        onDegreeAnalysis={handleDegreeAnalysis}
+        onPageRankAnalysis={handlePageRankAnalysis}
+        analyticsResult={analyticsResult}
 
 
         onAddNode={async () => {
@@ -597,6 +673,7 @@ onHierarchicalLayout={() => {
   nodeStrokeColor={(n) => (n.id === selectedNode ? "#9dff00ff" : "#f3ebebff")}
 
   nodeColor={(n) => (n?.style?.backgroundColor as string) || "#e91c1cff"}
+   nodeClassName="minimap-node"
 />
 
     </div>

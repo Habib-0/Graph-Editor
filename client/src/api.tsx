@@ -1,3 +1,5 @@
+import * as htmlToImage from "html-to-image";
+
 export async function fetchNodes() {
   const res = await fetch("http://localhost:5000/nodes");
   return await res.json();
@@ -111,5 +113,56 @@ export async function updateEdgeWeight(edgeId: number, weight: number) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ weight }),
   });
-  return res.json(); 
+  return res.json();
+}
+
+export async function exportGraphML(nodes: any[], edges: any[]) {
+  const xmlHeader = `<?xml version="1.0" encoding="UTF-8"?>`;
+  const graphOpen = `<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <graph id="G" edgedefault="undirected">`;
+
+  const nodeXml = nodes
+    .map(
+      (n) => `<node id="n${n.id}">
+      <data key="label">${n.name || ""}</data>
+    </node>`
+    )
+    .join("\n");
+
+  const edgeXml = edges
+    .map(
+      (e) => `<edge id="e${e.edge_id || e.id}" source="n${e.from_node || parseInt(e.source.replace("n", ""))}" target="n${e.to_node || parseInt(e.target.replace("n", ""))}">
+      <data key="weight">${e.weight || e.label || 0}</data>
+    </edge>`
+    )
+    .join("\n");
+
+  const graphClose = `</graph></graphml>`;
+  const graphML = `${xmlHeader}\n${graphOpen}\n${nodeXml}\n${edgeXml}\n${graphClose}`;
+
+
+  const blob = new Blob([graphML], { type: "application/xml" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "graph.graphml");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+export async function exportGraphAsPNG() {
+  const flowElement = document.querySelector(".react-flow");
+  
+
+  try {
+    const dataUrl = await htmlToImage.toPng(flowElement as HTMLElement);
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "graph.png";
+    link.click();
+  } catch (err) {
+    console.error("PNG export failed:", err);
+  }
 }

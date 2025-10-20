@@ -1,4 +1,8 @@
-1. I am planning to create a Graph Editor for my assignment. I have chosen to start with TypeScript, React.js, and the React Flow library.
+Project Overview
+
+Iam building a Graph Editor using TypeScript,React js,and the React flow libary.
+The purpose of this tool is to visualize edit,and mange graphs interactively.
+
 
 I began by adding nodes and edges only in my front-end as an array, and I was able to see my nodes and edges.
 
@@ -44,3 +48,9 @@ The Undo operation retrieves the most recent log entry and reverses that change 
 The Redo operation reapplies the last undone action by re-executing the stored data from the log.
 
 This design allows users to safely step backward and forward through their editing history without losing data or breaking the graph structure.
+
+I have implemented the Force-Directed Layout, Using the d3 libary . which visually arranges the graph with animations and directional arrows so that users can easily understand the connections between nodes.
+
+I have also created a Grid Layout, where users can click the “Grid” button and see all nodes neatly organized in a grid structure.
+
+Additionally, I implemented both the Hierarchical and Circular Layouts, allowing users to click on them and instantly visualize the graph in those styles.
