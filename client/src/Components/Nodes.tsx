@@ -40,6 +40,10 @@ export default function Nodes() {
   const [startNode, setStartNode] = useState<number | null>(null);
 const [endNode, setEndNode] = useState<number | null>(null);
 const [analyticsResult, setAnalyticsResult] = useState<{ title: string; data: any[] } | null>(null);
+const [isForceDirected, setIsForceDirected] = useState(false);
+const [shortestPathText, setShortestPathText] = useState<string>("");
+
+
 
 
   const reactFlowInstance = useReactFlow();
@@ -61,17 +65,19 @@ const [analyticsResult, setAnalyticsResult] = useState<{ title: string; data: an
       }))
     );
 
-      setEdges(
-        updatedEdges.map((e: any) => ({
-          id: `e${e.edge_id}`,
-          source: `n${e.from_node}`,
-          target: `n${e.to_node}`,
-          label: e.weight?.toString() || "",
-          type:"smooth",
-          markerEnd: undefined,
-          animated:false,
-        }))
-      );
+   setEdges(
+  updatedEdges.map((e: any) => ({
+    id: `e${e.edge_id}`,
+    source: `n${e.from_node}`,
+    target: `n${e.to_node}`,
+    label: e.weight?.toString() || "",
+    type: "smooth",
+    markerEnd: e.directed ? "url(#arrowhead)" : undefined,
+    animated: false,
+    directed: e.directed,
+  }))
+);
+
 
 
 
@@ -118,22 +124,24 @@ const nodeTypes = {
   );
 
 const onConnect = useCallback((connection: Connection) => {
-  const wStr = prompt(" set Weight?", "1");
-  const weight = wStr === null ? 1 : Math.max(0, Number(wStr) || 1);
+
+  const defaultWeight = 1;
 
   const newEdge = {
     ...connection,
     id: `e${Date.now()}`,
     type: "smooth",
-    label: String(weight),
+    label: String(defaultWeight),
+    directed: true,
   };
+
 
   setEdges((prev) => [...prev, newEdge]);
 
   api.addEdge(
     parseInt(connection.source!.replace("n", ""), 10),
     parseInt(connection.target!.replace("n", ""), 10),
-    weight
+    defaultWeight
   );
 }, []);
 
@@ -174,66 +182,40 @@ const onConnect = useCallback((connection: Connection) => {
 
 
 const onShortestPath = () => {
-  console.log("onShortestPath called");
-
   if (!startNode || !endNode) {
-    console.warn("choose a node ");
+    setShortestPathText("chose a start.");
     return;
   }
 
-  const { path } = dijkstraWithPath(nodes, edges, startNode, endNode);
-  console.log("Kortaste vägen:", path);
+ const { path, distances } = dijkstraWithPath(nodes, edges, startNode, endNode, isForceDirected);
 
-  if (!path || path.length === 0) {
-    console.warn("No nodes found !");
+  if (!path || path.length === 0 || !isFinite(distances[endNode])) {
+    setShortestPathText("no path way fhas been found.");
     return;
   }
 
+  const nodeNames = path
+    .map((id) => nodes.find((n) => n.id === id)?.name || `Node ${id}`)
+    .join(" → ");
 
-  setRfNodes(prev =>
-    prev.map(n => {
+  setShortestPathText(`shortest: ${nodeNames} (Distans: ${distances[endNode]})`);
+
+
+  setRfNodes((prev) =>
+    prev.map((n) => {
       const id = parseInt(n.id.replace("n", ""));
       if (id === startNode)
-        return {
-          ...n,
-          style: {
-            ...n.style,
-            backgroundColor: "#32cd32",
-            border: "3px solid darkgreen",
-          },
-        };
+        return { ...n, style: { ...n.style, backgroundColor: "#32cd32", border: "3px solid darkgreen" } };
       if (id === endNode)
-        return {
-          ...n,
-          style: {
-            ...n.style,
-            backgroundColor: "#dc143c",
-            border: "3px solid darkred",
-          },
-        };
+        return { ...n, style: { ...n.style, backgroundColor: "#dc143c", border: "3px solid darkred" } };
       if (path.includes(id))
-        return {
-          ...n,
-          style: {
-            ...n.style,
-            backgroundColor: "#ffeb3b",
-            border: "3px solid orange",
-          },
-        };
-      return {
-        ...n,
-        style: {
-          ...n.style,
-          backgroundColor: "white",
-          border: "2px solid #333",
-        },
-      };
+        return { ...n, style: { ...n.style, backgroundColor: "#ffeb3b", border: "3px solid orange" } };
+      return { ...n, style: { ...n.style, backgroundColor: "white", border: "2px solid #333" } };
     })
   );
 
-
-  setEdges(prev =>
-    prev.map(e => {
+  setEdges((prev) =>
+    prev.map((e) => {
       const from = parseInt(e.source.replace("n", ""));
       const to = parseInt(e.target.replace("n", ""));
       const inPath =
@@ -246,51 +228,24 @@ const onShortestPath = () => {
             ...e,
             animated: true,
             style: { stroke: "orange", strokeWidth: 3 },
-            markerEnd: {
-              type: "arrowclosed",
-              color: "orange",
-              width: 15,
-              height: 15,
-            },
+            markerEnd: { type: "arrowclosed", color: "orange", width: 15, height: 15 },
           }
         : {
             ...e,
             animated: false,
             style: { stroke: "#333", strokeWidth: 1 },
-            markerEnd: {
-              type: "arrowclosed",
-              color: "#333",
-              width: 10,
-              height: 10,
-            },
+            markerEnd: { type: "arrowclosed", color: "#333", width: 10, height: 10 },
           };
     })
   );
 };
-
-const onEditSelectedEdgeWeight = useCallback(async () => {
-  if (!selectedEdge) {
-
-    return;
-  }
-
+const onEditSelectedEdgeWeight = useCallback(async (newWeight: number) => {
+  if (!selectedEdge) return;
 
   const edge = edges.find((e) => e.id === selectedEdge);
   if (!edge) return;
 
-  const currentWeight = Number(edge.label) || 0;
-  const input = prompt(
-    `new weight for the edge ${edge.source} → ${edge.target}:`,
-    String(currentWeight)
-  );
-
-  if (input === null) return;
-
-  const newWeight = Number(input);
-  if (!Number.isFinite(newWeight) || newWeight < 0) {
-
-    return;
-  }
+  if (!Number.isFinite(newWeight) || newWeight < 0) return;
 
 
   setEdges((prev) =>
@@ -301,12 +256,9 @@ const onEditSelectedEdgeWeight = useCallback(async () => {
 
 
   const edgeId = parseInt(edge.id.replace("e", ""), 10);
-const res = await api.updateEdgeWeight(edgeId, newWeight);
-  if (res.success) {
+  const res = await api.updateEdgeWeight(edgeId, newWeight);
 
-  } else {
-    alert("couldnot find in databae");
-  }
+
 }, [selectedEdge, edges]);
 
 
@@ -388,6 +340,7 @@ const handlePageRankAnalysis = useCallback(() => {
         onDegreeAnalysis={handleDegreeAnalysis}
         onPageRankAnalysis={handlePageRankAnalysis}
         analyticsResult={analyticsResult}
+         shortestPathText={shortestPathText}
 
 
         onAddNode={async () => {
@@ -484,8 +437,8 @@ const handlePageRankAnalysis = useCallback(() => {
           await reloadGraph();
         }}
 
-
 onForceLayout={() => {
+  setIsForceDirected(true);
   runForceLayout(
     nodes,
     edges.map((e) => ({
@@ -507,7 +460,6 @@ onForceLayout={() => {
         }))
       );
 
-
       setEdges((prev) =>
         prev.map((e) => ({
           ...e,
@@ -524,7 +476,9 @@ onForceLayout={() => {
 }}
 
 
+
 onHierarchicalLayout={() => {
+  setIsForceDirected(false);
   heriarchal(nodes, edges, (newPositions) => {
     setRfNodes(
       newPositions.map((n: any) => ({
@@ -551,6 +505,7 @@ onHierarchicalLayout={() => {
 }}
 
         onCircularLayout={() => {
+          setIsForceDirected(false);
           circularLayout(nodes, edges, (newPositions) => {
             setRfNodes(
               newPositions.map((n: any) => ({
@@ -566,6 +521,7 @@ onHierarchicalLayout={() => {
         }}
 
         onGridLayout={() => {
+          setIsForceDirected(false);
           gridlayout(nodes, edges, (newPositions) => {
             setRfNodes(
               newPositions.map((n: any) => ({

@@ -75,12 +75,13 @@ app.post("/deletenode", async (req, res) => {
 
 app.post("/addedges", async (req, res) => {
   try {
-    const { from_node, to_node, weight, directed } = req.body;
+    let { from_node, to_node, weight, directed } = req.body;
+    if (directed === undefined) directed = true; 
+
     const newEdge = await pool.query(
       "INSERT INTO edges (from_node,to_node,weight,directed) VALUES ($1,$2,$3,$4) RETURNING *",
       [from_node, to_node, weight, directed]
     );
-
 
     await pool.query(
       "INSERT INTO log (name, table_name, data) VALUES ($1, $2, $3::jsonb)",
@@ -89,9 +90,10 @@ app.post("/addedges", async (req, res) => {
 
     res.json(newEdge.rows[0]);
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 });
+
 
 app.post("/deletedges", async (req, res) => {
   try {
@@ -328,7 +330,7 @@ app.put("/edges/by-nodes", async (req, res) => {
       return res.json({ success: false });
     }
 
-    // Lägg till i log-tabellen (så Undo/Redo funkar)
+
     await pool.query(
       "INSERT INTO log (name, table_name, data) VALUES ($1, $2, $3::jsonb)",
       ["updateedge", "edges", JSON.stringify(result.rows[0])]

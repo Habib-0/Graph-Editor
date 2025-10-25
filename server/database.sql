@@ -1,8 +1,7 @@
--- Skapa databas
+
 CREATE DATABASE graphs;
 
 
-\c graphs
 
 
 CREATE TABLE nodes (

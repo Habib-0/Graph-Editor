@@ -14,7 +14,10 @@ interface NodeControlsProps {
   onHierarchicalLayout: () => void;
   onCircularLayout: () => void;
   onGridLayout: () => void;
-  onEditEdgeWeight: () => void;
+  onEditEdgeWeight: (newWeight: number) => void;
+
+  shortestPathText?: string;
+
 
   nodeName: string;
   setNodeName: (name: string) => void;
@@ -42,6 +45,7 @@ export default function NodeControls({
   onSaveCsv,
   nodeName,
   setNodeName,
+
   onEditEdgeWeight,
   onShortestPath,
   onHierarchicalLayout,
@@ -57,8 +61,14 @@ export default function NodeControls({
   edges,
   onDegreeAnalysis,
   onPageRankAnalysis,
+  shortestPathText,
   analyticsResult
 }: NodeControlsProps) {
+
+
+  const [newWeight, setNewWeight] = useState<string>("");
+const [weightChangeMode, setWeightChangeMode] = useState<boolean>(false);
+
 
 
   const [darkMode, setDarkMode] = useState(()=>{
@@ -85,16 +95,51 @@ export default function NodeControls({
   return (
     <div className="toolbar">
 
+
+      {shortestPathText && (
+  <div className="shortest-path-box">
+    <h4>shortest path</h4>
+    <p>{shortestPathText}</p>
+  </div>
+)}
+
+
       <div className="menu">
         <button className="menu-title" onClick={() => toggleMenu("edit")}>
-          ✏️ Edit {openMenu === "edit" ? "▲" : "▼"}
+           Edit {openMenu === "edit" ? "▲" : "▼"}
         </button>
         {openMenu === "edit" && (
           <div className="menu-content">
             <button onClick={onAddNode}>＋ Add Node</button>
-            <button onClick={onDeleteNode}>🗑️ Delete Node</button>
-            <button onClick={onDeleteEdge}>🗑️ Delete Edge</button>
-            <button onClick={onEditEdgeWeight}>⚖️ Change Weight</button>
+            <button onClick={onDeleteNode}> Delete Node</button>
+            <button onClick={onDeleteEdge}> Delete Edge</button>
+            <button onClick={() => setWeightChangeMode(!weightChangeMode)}>
+  {weightChangeMode ? "Cancel Change" : "Change Weight"}
+</button>
+
+{weightChangeMode && (
+  <div className="weight-change-box">
+    <label>New Weight:</label>
+    <input
+      type="number"
+      placeholder="Enter new weight"
+      value={newWeight}
+      onChange={(e) => setNewWeight(e.target.value)}
+    />
+    <button
+      onClick={() => {
+        const weight = parseFloat(newWeight);
+        if (!isNaN(weight) && weight >= 0) {
+          onEditEdgeWeight(weight);
+          setNewWeight("");
+          setWeightChangeMode(false);
+        }
+      }}
+    >
+      Apply
+    </button>
+  </div>
+)}
           </div>
         )}
       </div>
@@ -102,7 +147,7 @@ export default function NodeControls({
       {}
       <div className="menu">
         <button className="menu-title" onClick={() => toggleMenu("history")}>
-          ↩️ History {openMenu === "history" ? "▲" : "▼"}
+          ↩ History {openMenu === "history" ? "▲" : "▼"}
         </button>
         {openMenu === "history" && (
           <div className="menu-content">
@@ -115,7 +160,7 @@ export default function NodeControls({
       {}
       <div className="menu">
         <button className="menu-title" onClick={() => toggleMenu("layout")}>
-          🧭 Layout {openMenu === "layout" ? "▲" : "▼"}
+           Layout {openMenu === "layout" ? "▲" : "▼"}
         </button>
         {openMenu === "layout" && (
           <div className="menu-content scrollable">
@@ -130,14 +175,14 @@ export default function NodeControls({
       {}
       <div className="menu">
         <button className="menu-title" onClick={() => toggleMenu("data")}>
-          📊 Data {openMenu === "data" ? "▲" : "▼"}
+           Data {openMenu === "data" ? "▲" : "▼"}
         </button>
         {openMenu === "data" && (
           <div className="menu-content scrollable">
-            <button onClick={onSaveCsv}>💾 Save CSV → DB</button>
-            <button onClick={exportall}>⬇️ Export CSV</button>
+            <button onClick={onSaveCsv}> Save CSV → DB</button>
+            <button onClick={exportall}>⬇ Export CSV</button>
              <button onClick={() => exportGraphML(nodes, edges)}>🧩 Export GraphML</button>
-            <button onClick={exportGraphAsPNG}>🖼️ Export PNG</button>
+            <button onClick={exportGraphAsPNG}> Export PNG</button>
             <ImportCSV onImportNodes={onImportNodes} onImportEdges={onImportEdges} />
           </div>
         )}
@@ -146,11 +191,11 @@ export default function NodeControls({
       {}
       <div className="menu">
         <button className="menu-title" onClick={() => toggleMenu("tools")}>
-          🧰 Tools {openMenu === "tools" ? "▲" : "▼"}
+           Tools {openMenu === "tools" ? "▲" : "▼"}
         </button>
         {openMenu === "tools" && (
           <div className="menu-content">
-            <button onClick={onShortestPath}>🧮 Shortest Path</button>
+            <button onClick={onShortestPath}>  Shortest Path</button>
             <input
               type="text"
               value={nodeName}
@@ -179,13 +224,13 @@ export default function NodeControls({
 
       <div className="menu">
   <button className="menu-title" onClick={() => toggleMenu("analytics")}>
-    📈 Analytics {openMenu === "analytics" ? "▲" : "▼"}
+     Analytics {openMenu === "analytics" ? "▲" : "▼"}
   </button>
 
   {openMenu === "analytics" && (
     <div className="menu-content scrollable">
       <button onClick={onDegreeAnalysis}>🔹 Degree Centrality</button>
-      <button onClick={onPageRankAnalysis}>⭐ PageRank</button>
+      <button onClick={onPageRankAnalysis}> PageRank</button>
 
 {analyticsResult && openMenu === "analytics" && (
   <div className="analysis-box">

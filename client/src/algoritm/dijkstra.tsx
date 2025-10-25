@@ -7,42 +7,41 @@ interface Edge {
   target?: string;
   weight?: number;
   label?: string;
+  directed?: boolean;
 }
 
 interface Node {
   id: number;
   name: string;
 }
-
 export function dijkstraWithPath(
   nodes: Node[],
   edges: Edge[],
   startId: number,
-  endId: number
+  endId: number,
+  isDirected: boolean 
 ): { distances: Record<number, number>; path: number[] } {
   const graph: Record<number, Record<number, number>> = {};
 
-  // Initiera tomma adjacency lists
   for (const node of nodes) {
     graph[node.id] = {};
   }
 
-  // Bygg grafen från edges — hantera både from_node/to_node och source/target
   for (const edge of edges) {
-    const from =
-      edge.from_node ?? parseInt(edge.source?.replace("n", "") || "0");
-    const to =
-      edge.to_node ?? parseInt(edge.target?.replace("n", "") || "0");
+    const from = edge.from_node ?? parseInt(edge.source?.replace("n", "") || "0");
+    const to = edge.to_node ?? parseInt(edge.target?.replace("n", "") || "0");
     const weight = edge.weight ?? (edge.label ? Number(edge.label) : 1);
+    const directed = isDirected ? (edge.directed ?? true) : false;
 
     if (!graph[from]) graph[from] = {};
     if (!graph[to]) graph[to] = {};
 
     graph[from][to] = weight;
-    graph[to][from] = weight; // Om grafen är icke-riktad
+    if (!directed) {
+      graph[to][from] = weight;
+    }
   }
 
-  // Dijkstra börjar här
   const distances: Record<number, number> = {};
   const previous: Record<number, number | null> = {};
   const visited = new Set<number>();
@@ -53,9 +52,7 @@ export function dijkstraWithPath(
   }
 
   distances[startId] = 0;
-  const pq = new Heap<{ node: number; priority: number }>(
-    (a, b) => a.priority - b.priority
-  );
+  const pq = new Heap<{ node: number; priority: number }>((a, b) => a.priority - b.priority);
   pq.push({ node: startId, priority: 0 });
 
   while (pq.size() > 0) {
@@ -75,7 +72,6 @@ export function dijkstraWithPath(
     }
   }
 
-  // Bygg vägen
   const path: number[] = [];
   let curr: number | null = endId;
   while (curr !== null) {

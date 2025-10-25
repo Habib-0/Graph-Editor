@@ -21,12 +21,12 @@ interface ImportProps {
   onImportEdges?: (edges: CSVEdge[]) => void;
 }
 
-
-function circilelay(nodes: CSVNode[]) {
+/* === Cirkel-layout: bra för små grafer === */
+function circleLayout(nodes: CSVNode[]) {
   const n = nodes.length;
   const radius = 300;
-  const centerX = 500;
-  const centerY = 300;
+  const centerX = 800;
+  const centerY = 500;
 
   return nodes.map((node, i) => {
     const angle = (2 * Math.PI * i) / n;
@@ -40,7 +40,8 @@ function circilelay(nodes: CSVNode[]) {
   });
 }
 
-function autoGridLayout(nodes: CSVNode[], cols = 5, spacing = 150) {
+/* === Grid-layout: bra för stora grafer === */
+function autoGridLayout(nodes: CSVNode[], cols = 40, spacing = 150) {
   return nodes.map((node, i) => {
     const row = Math.floor(i / cols);
     const col = i % cols;
@@ -54,6 +55,16 @@ function autoGridLayout(nodes: CSVNode[], cols = 5, spacing = 150) {
   });
 }
 
+/* === Slumpmässig spridning (backup) === */
+function randomSpread(nodes: CSVNode[]) {
+  return nodes.map((node) => ({
+    ...node,
+    position: {
+      x: Math.random() * 4000 - 2000,
+      y: Math.random() * 4000 - 2000,
+    },
+  }));
+}
 
 export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -72,6 +83,7 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
 
         const firstRow = results.data[0];
 
+        // === Hantera NODER ===
         if (
           (firstRow.id && firstRow.name) ||
           (firstRow.name && (firstRow.x !== undefined || firstRow.y !== undefined))
@@ -80,12 +92,12 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
             id: row.id ? Number(row.id) : i + 1,
             name: row.name || `Node ${i + 1}`,
             position: {
-              x: row.x !== undefined && row.x !== "" ? Number(row.x) : NaN,
-              y: row.y !== undefined && row.y !== "" ? Number(row.y) : NaN,
+              x: Number(row.x),
+              y: Number(row.y),
             },
           }));
 
-
+          // Kolla om några noder saknar positioner
           const missingPositions = parsedNodes.some(
             (n) => isNaN(n.position.x) || isNaN(n.position.y)
           );
@@ -93,17 +105,19 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
           let finalNodes = parsedNodes;
 
           if (missingPositions) {
-
-            finalNodes =
-              parsedNodes.length < 15
-                ? circilelay(parsedNodes)
-                : autoGridLayout(parsedNodes);
+            if (parsedNodes.length <= 20) {
+              finalNodes = circleLayout(parsedNodes);
+            } else if (parsedNodes.length <= 200) {
+              finalNodes = autoGridLayout(parsedNodes);
+            } else {
+              finalNodes = randomSpread(parsedNodes);
+            }
           }
 
           onImportNodes?.(finalNodes);
         }
 
-
+        // === Hantera KANTER ===
         else if (firstRow.edge_id || (firstRow.from_node && firstRow.to_node)) {
           const parsedEdges: CSVEdge[] = results.data.map((row: any, i: number) => ({
             edge_id: row.edge_id ? Number(row.edge_id) : i + 1,

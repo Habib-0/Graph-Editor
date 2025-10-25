@@ -37,7 +37,12 @@ export async function deleteEdge(id: number) {
   return await res.json();
 }
 
-export async function addEdge(from: number, to: number, weight: number) {
+export async function addEdge(
+  from: number,
+  to: number,
+  weight: number,
+  directed: boolean = false
+) {
   const res = await fetch("http://localhost:5000/addedges", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -45,11 +50,12 @@ export async function addEdge(from: number, to: number, weight: number) {
       from_node: from,
       to_node: to,
       weight,
-      directed: false,
+      directed,
     }),
   });
   return await res.json();
 }
+
 
 
 export async function saveCsvToDB(nodes: any[]) {
@@ -154,7 +160,7 @@ export async function exportGraphML(nodes: any[], edges: any[]) {
 
 export async function exportGraphAsPNG() {
   const flowElement = document.querySelector(".react-flow");
-  
+
 
   try {
     const dataUrl = await htmlToImage.toPng(flowElement as HTMLElement);
