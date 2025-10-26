@@ -37,24 +37,24 @@ export async function deleteEdge(id: number) {
   return await res.json();
 }
 
-export async function addEdge(
-  from: number,
-  to: number,
-  weight: number,
-  directed: boolean = false
-) {
-  const res = await fetch("http://localhost:5000/addedges", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from_node: from,
-      to_node: to,
-      weight,
-      directed,
-    }),
-  });
-  return await res.json();
+export async function addEdge(from_node: number, to_node: number, weight: number, directed = true) {
+  try {
+    const response = await fetch("http://localhost:5000/addedges", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from_node, to_node, weight, directed }), 
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error adding edge:", error);
+    return { success: false };
+  }
 }
+
 
 
 

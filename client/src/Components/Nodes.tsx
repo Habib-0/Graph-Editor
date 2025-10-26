@@ -122,9 +122,7 @@ const nodeTypes = {
     (changes: EdgeChange[]) => setEdges((prev) => applyEdgeChanges(changes, prev)),
     []
   );
-
 const onConnect = useCallback((connection: Connection) => {
-
   const defaultWeight = 1;
 
   const newEdge = {
@@ -132,18 +130,20 @@ const onConnect = useCallback((connection: Connection) => {
     id: `e${Date.now()}`,
     type: "smooth",
     label: String(defaultWeight),
-    directed: true,
+    directed: true, 
   };
 
-
   setEdges((prev) => [...prev, newEdge]);
+
 
   api.addEdge(
     parseInt(connection.source!.replace("n", ""), 10),
     parseInt(connection.target!.replace("n", ""), 10),
-    defaultWeight
+    defaultWeight,
+    true
   );
 }, []);
+
 
 
   const handleSearch = (query: string) => {
@@ -187,7 +187,7 @@ const onShortestPath = () => {
     return;
   }
 
- const { path, distances } = dijkstraWithPath(nodes, edges, startNode, endNode, isForceDirected);
+ const { path, distances } = dijkstraWithPath(nodes, edges, startNode, endNode,);
 
   if (!path || path.length === 0 || !isFinite(distances[endNode])) {
     setShortestPathText("no path way fhas been found.");
@@ -281,7 +281,7 @@ const onEditSelectedNodeName = useCallback(async (newName: string) => {
     console.error("⚠️ Kunde inte uppdatera nodens namn i databasen");
   }
 
-  
+
   setNodes((prev) =>
     prev.map((n) => (n.id === nodeId ? { ...n, name: newName } : n))
   );

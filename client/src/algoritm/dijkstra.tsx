@@ -14,29 +14,34 @@ interface Node {
   id: number;
   name: string;
 }
+
 export function dijkstraWithPath(
   nodes: Node[],
   edges: Edge[],
   startId: number,
-  endId: number,
-  isDirected: boolean
+  endId: number
 ): { distances: Record<number, number>; path: number[] } {
   const graph: Record<number, Record<number, number>> = {};
 
+  
   for (const node of nodes) {
     graph[node.id] = {};
   }
+
 
   for (const edge of edges) {
     const from = edge.from_node ?? parseInt(edge.source?.replace("n", "") || "0");
     const to = edge.to_node ?? parseInt(edge.target?.replace("n", "") || "0");
     const weight = edge.weight ?? (edge.label ? Number(edge.label) : 1);
-    const directed = isDirected ? (edge.directed ?? true) : false;
+    const directed = edge.directed ?? true;
 
     if (!graph[from]) graph[from] = {};
     if (!graph[to]) graph[to] = {};
 
+
     graph[from][to] = weight;
+
+
     if (!directed) {
       graph[to][from] = weight;
     }
@@ -52,7 +57,9 @@ export function dijkstraWithPath(
   }
 
   distances[startId] = 0;
-  const pq = new Heap<{ node: number; priority: number }>((a, b) => a.priority - b.priority);
+  const pq = new Heap<{ node: number; priority: number }>(
+    (a, b) => a.priority - b.priority
+  );
   pq.push({ node: startId, priority: 0 });
 
   while (pq.size() > 0) {
@@ -63,16 +70,19 @@ export function dijkstraWithPath(
     visited.add(u);
 
     for (const v in graph[u]) {
-      const newDist = distances[u] + graph[u][v];
-      if (newDist < distances[Number(v)]) {
-        distances[Number(v)] = newDist;
+      const alt = distances[u] + graph[u][v];
+      if (alt < distances[Number(v)]) {
+        distances[Number(v)] = alt;
         previous[Number(v)] = u;
-        pq.push({ node: Number(v), priority: newDist });
+        pq.push({ node: Number(v), priority: alt });
       }
     }
   }
 
+
   const path: number[] = [];
+  if (!isFinite(distances[endId])) return { distances, path };
+
   let curr: number | null = endId;
   while (curr !== null) {
     path.unshift(curr);

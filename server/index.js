@@ -76,10 +76,11 @@ app.post("/deletenode", async (req, res) => {
 app.post("/addedges", async (req, res) => {
   try {
     let { from_node, to_node, weight, directed } = req.body;
-    if (directed === undefined) directed = true;
+
+    directed = directed === true || directed === "true";
 
     const newEdge = await pool.query(
-      "INSERT INTO edges (from_node,to_node,weight,directed) VALUES ($1,$2,$3,$4) RETURNING *",
+      "INSERT INTO edges (from_node, to_node, weight, directed) VALUES ($1, $2, $3, $4) RETURNING *",
       [from_node, to_node, weight, directed]
     );
 
@@ -91,8 +92,10 @@ app.post("/addedges", async (req, res) => {
     res.json(newEdge.rows[0]);
   } catch (err) {
     console.error(err);
+    res.status(500).json({ success: false });
   }
 });
+
 
 
 app.post("/deletedges", async (req, res) => {
@@ -380,7 +383,7 @@ app.put("/api/nodes/:id/rename", async (req, res) => {
     res.json({ success: true, updated: result.rows[0] });
   } catch (err) {
     console.error("Error updating node name:", err);
-    
+
   }
 });
 
