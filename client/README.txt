@@ -29,7 +29,7 @@ When I click Import, I can choose either nodes or edges.
 
 First, I import the nodes and save them to my database.
 
-I’ve also created a Save to Database button — when I click it, I can see my nodes displayed on the website.
+I’ve also created a Save to Database button — when I click it, I can see my nodes displayed on the website. i have to refresh my website efter saving to databse
 
 Then, I click Import again and import the edges.
 I save them to the database as well as the frontend, and I can now see all my nodes and edges along with their attributes.

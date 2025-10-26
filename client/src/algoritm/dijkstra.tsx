@@ -19,7 +19,7 @@ export function dijkstraWithPath(
   edges: Edge[],
   startId: number,
   endId: number,
-  isDirected: boolean 
+  isDirected: boolean
 ): { distances: Record<number, number>; path: number[] } {
   const graph: Record<number, Record<number, number>> = {};
 

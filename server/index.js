@@ -76,7 +76,7 @@ app.post("/deletenode", async (req, res) => {
 app.post("/addedges", async (req, res) => {
   try {
     let { from_node, to_node, weight, directed } = req.body;
-    if (directed === undefined) directed = true; 
+    if (directed === undefined) directed = true;
 
     const newEdge = await pool.query(
       "INSERT INTO edges (from_node,to_node,weight,directed) VALUES ($1,$2,$3,$4) RETURNING *",
@@ -359,6 +359,31 @@ app.put("/edges/:edge_id/weight", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
+app.put("/api/nodes/:id/rename", async (req, res) => {
+  const nodeId = req.params.id;
+  const { name } = req.body;
+
+  try {
+
+
+
+    const result = await pool.query(
+      "UPDATE nodes SET name = $1 WHERE id = $2 RETURNING *",
+      [name.trim(), nodeId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "Node not found" });
+    }
+
+    res.json({ success: true, updated: result.rows[0] });
+  } catch (err) {
+    console.error("Error updating node name:", err);
+    
+  }
+});
+
 
 
 

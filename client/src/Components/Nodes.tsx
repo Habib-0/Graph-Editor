@@ -261,6 +261,34 @@ const onEditSelectedEdgeWeight = useCallback(async (newWeight: number) => {
 
 }, [selectedEdge, edges]);
 
+const onEditSelectedNodeName = useCallback(async (newName: string) => {
+  if (!selectedNode) return;
+
+  const nodeId = parseInt(selectedNode.replace("n", ""), 10);
+
+
+  setRfNodes((prev) =>
+    prev.map((n) =>
+      n.id === selectedNode ? { ...n, data: { ...n.data, label: newName } } : n
+    )
+  );
+
+
+  const res = await api.updateNodeName(nodeId, newName);
+  console.log("🔹 API response:", res);
+
+  if (!res.success) {
+    console.error("⚠️ Kunde inte uppdatera nodens namn i databasen");
+  }
+
+  
+  setNodes((prev) =>
+    prev.map((n) => (n.id === nodeId ? { ...n, name: newName } : n))
+  );
+}, [selectedNode, nodes]);
+
+
+
 
 
 const handleDegreeAnalysis = useCallback(() => {
@@ -340,7 +368,9 @@ const handlePageRankAnalysis = useCallback(() => {
         onDegreeAnalysis={handleDegreeAnalysis}
         onPageRankAnalysis={handlePageRankAnalysis}
         analyticsResult={analyticsResult}
-         shortestPathText={shortestPathText}
+        shortestPathText={shortestPathText}
+       onEditNodeName={onEditSelectedNodeName}
+
 
 
         onAddNode={async () => {

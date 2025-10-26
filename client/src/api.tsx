@@ -172,3 +172,23 @@ export async function exportGraphAsPNG() {
     console.error("PNG export failed:", err);
   }
 }
+
+
+
+export async function updateNodeName(nodeId: number, newName: string) {
+  try {
+    const response = await fetch(`http://localhost:5000/api/nodes/${nodeId}/rename`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: newName }),
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error updating node name:", error);
+    return { success: false };
+  }
+}
