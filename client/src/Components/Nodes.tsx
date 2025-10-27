@@ -130,7 +130,7 @@ const onConnect = useCallback((connection: Connection) => {
     id: `e${Date.now()}`,
     type: "smooth",
     label: String(defaultWeight),
-    directed: true, 
+    directed: true,
   };
 
   setEdges((prev) => [...prev, newEdge]);
@@ -278,7 +278,7 @@ const onEditSelectedNodeName = useCallback(async (newName: string) => {
   console.log("🔹 API response:", res);
 
   if (!res.success) {
-    console.error("⚠️ Kunde inte uppdatera nodens namn i databasen");
+    console.error("could not update the nodes name ");
   }
 
 

@@ -1,56 +1,78 @@
-Project Overview
+Overview
 
-Iam building a Graph Editor using TypeScript,React js,and the React flow libary.
-The purpose of this tool is to visualize edit,and mange graphs interactively.
+The Graph Editor is an interactive tool built with TypeScript, React.js, and the React Flow library.
+Its main purpose is to help users visually create, edit, and manage graphs with nodes, edges, and their attributes in a user-friendly interface.
 
+Project Background
 
-I began by adding nodes and edges only in my front-end as an array, and I was able to see my nodes and edges.
+I began this project by creating nodes and edges directly on the frontend using arrays.
+Although I was able to visualize them successfully, all data disappeared whenever the server restarted — because I had no backend yet.
 
-However, when I restarted my server, the data disappeared because I didn't have any backend.
+Initially, I attempted to use Neo4j for the backend but encountered several setup issues.
+I eventually switched to PostgreSQL, which was easier to manage and more familiar to me because of my prior experience with MySQL.
 
-Then, I decided to use Neo4j. I tried to set it up but faced many issues. I eventually changed.
+After connecting PostgreSQL to my project using a Node.js (Express) API, I created database tables for nodes and edges along with their attributes.
+To confirm the connection, I tested adding a new node from the frontend and verified that it appeared in the PostgreSQL database.
 
-my mind and decided to use PostgreSQL because it was easier and similar to MySQL. I already have experience with MySQL.
+Implemented Features
+1. Node and Edge Management
 
-I connected my backend through a Node.js API, created a database, and set up tables for nodes and edges with their attributes.
+Add, delete, and edit nodes and edges interactively.
 
-I was able to successfully connect my database to my project. To verify the connection, I clicked on "Add Node"
+Each node stores a name, x- and y-coordinates, and can be repositioned through drag-and-drop.
 
- in the frontend, and then checked my PostgreSQL terminal to see that the new node I added appeared in the database.
+Edges connect nodes dynamically and store attributes such as weight and direction.
 
- then i added attributes to my nodes where i can write my nodes namne and saving the postition of my nodes on x and y and
+2. Import and Export
 
-i could drag an edge to my nodes and it connected as an edge.
-I’ve implemented the import and export functionality using CSV files.
+Import and export graph data using CSV files via the PapaParse library.
 
-I’m using the PapaParse library, which allows me to open local files.
+Separate import options for nodes and edges.
 
-When I click Import, I can choose either nodes or edges.
+A Save to Database button allows syncing the frontend with PostgreSQL.
 
-First, I import the nodes and save them to my database.
+Export graph data to CSV, PNG, and GraphML formats.
 
-I’ve also created a Save to Database button — when I click it, I can see my nodes displayed on the website. i have to refresh my website efter saving to databse
+3. Undo and Redo Functionality
 
-Then, I click Import again and import the edges.
-I save them to the database as well as the frontend, and I can now see all my nodes and edges along with their attributes.
+To manage change history, a new log table was introduced in the database.
+Each add, update, or delete action is recorded for both nodes and edges, allowing:
 
-To implement the Undo and Redo functionality in my project, I had to redesign parts of my backend to properly track all changes made to the graph (nodes and edges).
+Undo – revert the most recent change.
 
-I introduced a new database table called log, which serves as a history tracker for all modifications.
+Redo – reapply a previously undone change.
 
-Every time I perform an operation — such as adding, updating, or deleting a node or an edge — I insert a record of that action into the log table.
-This ensures that every change to the graph is saved chronologically and can be reversed when needed.
+This design allows safe navigation through the edit history without data loss.
 
-When a node or edge is deleted, its data is stored in the log table before removal, allowing the system to restore it later.
+4. Graph Layouts
 
-The Undo operation retrieves the most recent log entry and reverses that change (for example, re-adding a deleted node or removing a recently added one).
+Multiple graph layout algorithms were implemented:
 
-The Redo operation reapplies the last undone action by re-executing the stored data from the log.
+Force-Directed Layout using D3.js for dynamic positioning and visual clarity.
 
-This design allows users to safely step backward and forward through their editing history without losing data or breaking the graph structure.
+Grid Layout to organize nodes in a structured grid.
 
-I have implemented the Force-Directed Layout, Using the d3 libary . which visually arranges the graph with animations and directional arrows so that users can easily understand the connections between nodes.
+Hierarchical Layout and Circular Layout, switchable with a single click.
 
-I have also created a Grid Layout, where users can click the “Grid” button and see all nodes neatly organized in a grid structure.
+5. Graph Analytics
 
-Additionally, I implemented both the Hierarchical and Circular Layouts, allowing users to click on them and instantly visualize the graph in those styles.
+Shortest Path Finder using Dijkstra’s algorithm.
+
+Degree Centrality and PageRank analysis tools for exploring node importance.
+
+Technology Stack
+
+Frontend: React.js, TypeScript, React Flow
+
+Backend: Node.js (Express)
+
+Database: PostgreSQL
+
+Libraries: D3.js, PapaParse, json2csv
+
+Key Learnings
+
+Through this project, I gained hands-on experience in both frontend and backend development.
+I learned how to integrate React with a database-driven API, manage state efficiently, and handle data persistence.
+Implementing Undo/Redo and graph layouts strengthened my understanding of algorithms and data structures.
+Overall, this project improved my problem-solving, adaptability, and attention to detail as a developer

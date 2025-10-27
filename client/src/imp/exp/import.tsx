@@ -21,7 +21,7 @@ interface ImportProps {
   onImportEdges?: (edges: CSVEdge[]) => void;
 }
 
-/* === Cirkel-layout: bra för små grafer === */
+
 function circleLayout(nodes: CSVNode[]) {
   const n = nodes.length;
   const radius = 300;
@@ -40,7 +40,7 @@ function circleLayout(nodes: CSVNode[]) {
   });
 }
 
-/* === Grid-layout: bra för stora grafer === */
+
 function autoGridLayout(nodes: CSVNode[], cols = 40, spacing = 150) {
   return nodes.map((node, i) => {
     const row = Math.floor(i / cols);
@@ -55,7 +55,7 @@ function autoGridLayout(nodes: CSVNode[], cols = 40, spacing = 150) {
   });
 }
 
-/* === Slumpmässig spridning (backup) === */
+
 function randomSpread(nodes: CSVNode[]) {
   return nodes.map((node) => ({
     ...node,
@@ -83,7 +83,7 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
 
         const firstRow = results.data[0];
 
-        // === Hantera NODER ===
+
         if (
           (firstRow.id && firstRow.name) ||
           (firstRow.name && (firstRow.x !== undefined || firstRow.y !== undefined))
@@ -97,7 +97,7 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
             },
           }));
 
-          // Kolla om några noder saknar positioner
+
           const missingPositions = parsedNodes.some(
             (n) => isNaN(n.position.x) || isNaN(n.position.y)
           );
@@ -117,7 +117,7 @@ export default function ImportCSV({ onImportNodes, onImportEdges }: ImportProps)
           onImportNodes?.(finalNodes);
         }
 
-        // === Hantera KANTER ===
+
         else if (firstRow.edge_id || (firstRow.from_node && firstRow.to_node)) {
           const parsedEdges: CSVEdge[] = results.data.map((row: any, i: number) => ({
             edge_id: row.edge_id ? Number(row.edge_id) : i + 1,

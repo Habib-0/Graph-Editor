@@ -86,7 +86,7 @@ export default function NodeControls({
         </div>
       )}
 
-      {/* ===== EDIT MENU ===== */}
+      
       <div className="menu">
         <button className="menu-title" onClick={() => toggleMenu("edit")}>
           Edit {openMenu === "edit" ? "▲" : "▼"}

@@ -1,0 +1,11 @@
+edge_id,from_node,to_node,weight,directed
+1,1,2,1,false
+2,2,3,2,false
+3,3,4,1,false
+4,4,5,3,false
+5,5,1,1,false
+6,6,7,2,false
+7,7,8,1,false
+8,8,9,1,false
+9,9,10,2,false
+10,10,6,1,false

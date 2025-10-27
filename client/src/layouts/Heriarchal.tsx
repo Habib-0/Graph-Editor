@@ -16,7 +16,7 @@ export default function heriarchal(
 
     const treelayout = d3
       .tree<any>()
-      .nodeSize([80, levelSpacing]) 
+      .nodeSize([80, levelSpacing])
       .separation((a, b) => (a.parent === b.parent ? syskonSpacing : grenSpacing));
 
     treelayout(root);
@@ -34,7 +34,7 @@ export default function heriarchal(
     );
   });
 
-  // Centrera i mitten av skärmen
+  
   const minX = Math.min(...allPositions.map((n) => n.x));
   const maxX = Math.max(...allPositions.map((n) => n.x));
   const minY = Math.min(...allPositions.map((n) => n.y));
